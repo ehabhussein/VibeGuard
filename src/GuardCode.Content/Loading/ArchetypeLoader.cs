@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace GuardCode.Content.Loading;
 
 /// <summary>
@@ -52,7 +54,7 @@ public static class ArchetypeLoader
         return parsed;
     }
 
-    private static Dictionary<string, LanguageFile> LoadLanguageFiles(
+    private static FrozenDictionary<string, LanguageFile> LoadLanguageFiles(
         string expectedArchetypeId,
         IReadOnlyDictionary<string, string> filesInDirectory)
     {
@@ -88,7 +90,7 @@ public static class ArchetypeLoader
             languageFiles[languageFromFilename] = new LanguageFile(parsed.Frontmatter, parsed.Body);
         }
 
-        return languageFiles;
+        return languageFiles.ToFrozenDictionary(StringComparer.Ordinal);
     }
 }
 
