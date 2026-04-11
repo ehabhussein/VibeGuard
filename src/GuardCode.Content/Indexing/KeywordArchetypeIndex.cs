@@ -16,10 +16,13 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
     // so the tokenizer can stay allocation-light and skip case folding.
     private static readonly FrozenSet<string> Stopwords = new[]
     {
-        "a", "an", "and", "are", "as", "at", "be", "by", "do", "for", "from",
-        "how", "i", "in", "is", "it", "of", "on", "or", "that", "the", "this",
-        "to", "was", "what", "when", "where", "which", "why", "with", "you",
-        "my", "me", "we", "our", "your", "their", "they", "them"
+        "a", "an", "the", "and", "or", "but", "if", "then", "else",
+        "of", "in", "on", "at", "to", "for", "with", "from", "by",
+        "is", "are", "was", "were", "be", "been", "being",
+        "i", "im", "my", "we", "you", "your",
+        "how", "do", "does", "about", "want", "need",
+        "this", "that", "these", "those",
+        "it", "its", "as", "so"
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     private readonly FrozenDictionary<string, Archetype> _byId;
