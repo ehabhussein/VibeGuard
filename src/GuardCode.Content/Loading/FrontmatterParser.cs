@@ -1,3 +1,11 @@
+// YamlDotNet requires concrete mutable collection types for deserialization.
+// The pragma is justified and contained to the file-scoped DTOs below: the
+// public domain surface (PrinciplesFrontmatter, LanguageFrontmatter, ...) is
+// fully immutable and carries no suppressions.
+#pragma warning disable CA1002 // Do not expose generic lists
+#pragma warning disable CA2227 // Collection properties should be read only
+
+using System.Collections.Frozen;
 using System.Text;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -6,8 +14,8 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace GuardCode.Content.Loading;
 
 /// <summary>
-/// The outcome of a successful <see cref="FrontmatterParser.Parse{T}(string)"/> call:
-/// the strongly-typed frontmatter and the remaining markdown body.
+/// The outcome of a successful frontmatter parse: the strongly-typed
+/// frontmatter record and the remaining markdown body.
 /// </summary>
 /// <remarks>
 /// Declared at the top level (not nested inside <see cref="FrontmatterParser"/>)
@@ -17,7 +25,8 @@ public readonly record struct ParseResult<T>(T Frontmatter, string Body);
 
 /// <summary>
 /// Splits a markdown file into its YAML frontmatter and body, then
-/// strictly deserializes the frontmatter into a typed record.
+/// strictly deserializes the frontmatter into a mutable DTO before
+/// projecting it onto the public immutable record.
 /// </summary>
 /// <remarks>
 /// Strictness is load-bearing for security (design spec §6.3):
@@ -37,7 +46,58 @@ public static class FrontmatterParser
         // Do NOT call IgnoreUnmatchedProperties: we want unknown fields to throw.
         .Build();
 
-    public static ParseResult<T> Parse<T>(string fileContent) where T : class, new()
+    /// <summary>
+    /// Parse the frontmatter of an archetype <c>_principles.md</c> file into
+    /// the public immutable <see cref="PrinciplesFrontmatter"/> record.
+    /// </summary>
+    public static ParseResult<PrinciplesFrontmatter> ParsePrinciples(string fileContent)
+    {
+        var (dto, body) = ParseInternal<PrinciplesFrontmatterDto>(fileContent);
+        var projected = new PrinciplesFrontmatter
+        {
+            SchemaVersion = dto.SchemaVersion,
+            Archetype = dto.Archetype,
+            Title = dto.Title,
+            Summary = dto.Summary,
+            AppliesTo = dto.AppliesTo.ToArray(),
+            Keywords = dto.Keywords.ToArray(),
+            RelatedArchetypes = dto.RelatedArchetypes.ToArray(),
+            EquivalentsIn = dto.EquivalentsIn.ToFrozenDictionary(StringComparer.Ordinal),
+            References = dto.References.ToFrozenDictionary(StringComparer.Ordinal),
+        };
+        return new ParseResult<PrinciplesFrontmatter>(projected, body);
+    }
+
+    /// <summary>
+    /// Parse the frontmatter of an archetype language file (e.g. <c>csharp.md</c>)
+    /// into the public immutable <see cref="LanguageFrontmatter"/> record.
+    /// </summary>
+    public static ParseResult<LanguageFrontmatter> ParseLanguage(string fileContent)
+    {
+        var (dto, body) = ParseInternal<LanguageFrontmatterDto>(fileContent);
+        var projected = new LanguageFrontmatter
+        {
+            SchemaVersion = dto.SchemaVersion,
+            Archetype = dto.Archetype,
+            Language = dto.Language,
+            Framework = dto.Framework,
+            PrinciplesFile = dto.PrinciplesFile,
+            Libraries = new LibrariesSection
+            {
+                Preferred = dto.Libraries.Preferred,
+                Acceptable = dto.Libraries.Acceptable.ToArray(),
+                Avoid = dto.Libraries.Avoid.ConvertAll(static a => new AvoidedLibrary
+                {
+                    Name = a.Name,
+                    Reason = a.Reason,
+                }),
+            },
+            MinimumVersions = dto.MinimumVersions.ToFrozenDictionary(StringComparer.Ordinal),
+        };
+        return new ParseResult<LanguageFrontmatter>(projected, body);
+    }
+
+    private static (TDto Dto, string Body) ParseInternal<TDto>(string fileContent) where TDto : class, new()
     {
         if (fileContent is null)
         {
@@ -72,10 +132,10 @@ public static class FrontmatterParser
             throw new FrontmatterParseException(ErrUnclosed);
         }
 
-        T frontmatter;
+        TDto dto;
         try
         {
-            frontmatter = Deserializer.Deserialize<T>(yamlBuilder.ToString()) ?? new T();
+            dto = Deserializer.Deserialize<TDto>(yamlBuilder.ToString()) ?? new TDto();
         }
         catch (YamlException ex)
         {
@@ -83,7 +143,7 @@ public static class FrontmatterParser
         }
 
         var body = reader.ReadToEnd().TrimStart('\r', '\n');
-        return new ParseResult<T>(frontmatter, body);
+        return (dto, body);
     }
 
     private static string? ReadNextNonEmptyLine(TextReader reader)
@@ -98,4 +158,51 @@ public static class FrontmatterParser
         }
         return null;
     }
+
+}
+
+// -----------------------------------------------------------------------------
+// File-scoped mutable DTOs — YamlDotNet deserialization targets only.
+//
+// These types exist solely to give YamlDotNet mutable concrete collections to
+// populate; they are immediately projected onto the public immutable records
+// above and are not observable outside this file. The CA1002/CA2227 pragma at
+// the top of the file is justified and contained here.
+// -----------------------------------------------------------------------------
+
+file sealed class PrinciplesFrontmatterDto
+{
+    public int SchemaVersion { get; set; }
+    public string Archetype { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public List<string> AppliesTo { get; set; } = [];
+    public List<string> Keywords { get; set; } = [];
+    public List<string> RelatedArchetypes { get; set; } = [];
+    public Dictionary<string, string> EquivalentsIn { get; set; } = [];
+    public Dictionary<string, string> References { get; set; } = [];
+}
+
+file sealed class LanguageFrontmatterDto
+{
+    public int SchemaVersion { get; set; }
+    public string Archetype { get; set; } = string.Empty;
+    public string Language { get; set; } = string.Empty;
+    public string? Framework { get; set; }
+    public string PrinciplesFile { get; set; } = string.Empty;
+    public LibrariesSectionDto Libraries { get; set; } = new();
+    public Dictionary<string, string> MinimumVersions { get; set; } = [];
+}
+
+file sealed class LibrariesSectionDto
+{
+    public string Preferred { get; set; } = string.Empty;
+    public List<string> Acceptable { get; set; } = [];
+    public List<AvoidedLibraryDto> Avoid { get; set; } = [];
+}
+
+file sealed class AvoidedLibraryDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
 }

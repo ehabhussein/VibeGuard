@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using GuardCode.Content;
 using GuardCode.Content.Indexing;
 using GuardCode.Content.Services;
@@ -16,8 +17,8 @@ public class ConsultationServiceTests
         (string lang, string body)[] languageFiles,
         string principlesBody = "PRINCIPLES_BODY",
         string[]? relatedArchetypes = null,
-        Dictionary<string, string>? equivalentsIn = null,
-        Dictionary<string, string>? references = null)
+        IReadOnlyDictionary<string, string>? equivalentsIn = null,
+        IReadOnlyDictionary<string, string>? references = null)
     {
         var langMap = new Dictionary<string, LanguageFile>(StringComparer.Ordinal);
         foreach (var (lang, body) in languageFiles)
@@ -41,11 +42,11 @@ public class ConsultationServiceTests
                 Archetype = id,
                 Title = id,
                 Summary = "s",
-                AppliesTo = new List<string>(appliesTo),
-                Keywords = new List<string> { "k" },
-                RelatedArchetypes = new List<string>(relatedArchetypes ?? Array.Empty<string>()),
-                EquivalentsIn = equivalentsIn ?? new Dictionary<string, string>(),
-                References = references ?? new Dictionary<string, string>()
+                AppliesTo = [.. appliesTo],
+                Keywords = ["k"],
+                RelatedArchetypes = [.. relatedArchetypes ?? []],
+                EquivalentsIn = equivalentsIn ?? FrozenDictionary<string, string>.Empty,
+                References = references ?? FrozenDictionary<string, string>.Empty
             },
             PrinciplesBody: principlesBody,
             LanguageFiles: langMap);

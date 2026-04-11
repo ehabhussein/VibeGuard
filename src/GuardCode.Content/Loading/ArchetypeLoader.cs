@@ -75,7 +75,7 @@ public static class ArchetypeLoader
                 $"archetype '{expectedArchetypeId}' is missing required file '{PrinciplesFilename}'");
         }
 
-        var parsed = FrontmatterParser.Parse<PrinciplesFrontmatter>(principlesContent);
+        var parsed = FrontmatterParser.ParsePrinciples(principlesContent);
 
         if (!string.Equals(parsed.Frontmatter.Archetype, expectedArchetypeId, StringComparison.Ordinal))
         {
@@ -104,7 +104,7 @@ public static class ArchetypeLoader
             }
 
             var languageFromFilename = Path.GetFileNameWithoutExtension(filename);
-            var parsed = FrontmatterParser.Parse<LanguageFrontmatter>(content);
+            var parsed = FrontmatterParser.ParseLanguage(content);
 
             if (!string.Equals(parsed.Frontmatter.Language, languageFromFilename, StringComparison.Ordinal))
             {

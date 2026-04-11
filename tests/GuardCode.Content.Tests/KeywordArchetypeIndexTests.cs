@@ -24,9 +24,9 @@ public class KeywordArchetypeIndexTests
                 Archetype = id,
                 Title = title,
                 Summary = summary,
-                AppliesTo = new List<string>(appliesTo),
-                Keywords = new List<string>(keywords),
-                RelatedArchetypes = new List<string>(relatedArchetypes ?? Array.Empty<string>())
+                AppliesTo = [.. appliesTo],
+                Keywords = [.. keywords],
+                RelatedArchetypes = [.. relatedArchetypes ?? []]
             },
             PrinciplesBody: "body",
             LanguageFiles: new Dictionary<string, LanguageFile>(StringComparer.Ordinal));

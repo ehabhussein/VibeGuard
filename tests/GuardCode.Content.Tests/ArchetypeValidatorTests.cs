@@ -35,8 +35,8 @@ public class ArchetypeValidatorTests
                 Archetype = "test/example",
                 Title = "Example",
                 Summary = "summary",
-                AppliesTo = new List<string> { "csharp" },
-                Keywords = new List<string> { "example" }
+                AppliesTo = ["csharp"],
+                Keywords = ["example"]
             },
             PrinciplesBody: principlesBody,
             LanguageFiles: langMap);

@@ -27,9 +27,9 @@ public class PrepServiceTests
                 Archetype = id,
                 Title = title,
                 Summary = title + " summary.",
-                AppliesTo = new List<string>(appliesTo),
-                Keywords = new List<string>(keywords),
-                RelatedArchetypes = new List<string>()
+                AppliesTo = [.. appliesTo],
+                Keywords = [.. keywords],
+                RelatedArchetypes = []
             },
             PrinciplesBody: "body",
             LanguageFiles: new Dictionary<string, LanguageFile>(StringComparer.Ordinal));

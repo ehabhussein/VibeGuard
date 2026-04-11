@@ -1,33 +1,33 @@
-// YamlDotNet requires concrete mutable collection types for deserialization.
-#pragma warning disable CA1002 // Do not expose generic lists
-#pragma warning disable CA2227 // Collection properties should be read only
+using System.Collections.Frozen;
 
 namespace GuardCode.Content;
 
 /// <summary>
 /// Typed YAML frontmatter for an archetype's language file
 /// (<c>csharp.md</c>, <c>python.md</c>, etc.). See design spec §4.2.
+/// Immutable record projected from a file-scoped mutable DTO inside
+/// <c>Loading.FrontmatterParser</c> after strict YamlDotNet deserialization.
 /// </summary>
-public sealed class LanguageFrontmatter
+public sealed record LanguageFrontmatter
 {
-    public int SchemaVersion { get; set; }
-    public string Archetype { get; set; } = string.Empty;
-    public string Language { get; set; } = string.Empty;
-    public string? Framework { get; set; }
-    public string PrinciplesFile { get; set; } = string.Empty;
-    public LibrariesSection Libraries { get; set; } = new();
-    public Dictionary<string, string> MinimumVersions { get; set; } = new();
+    public int SchemaVersion { get; init; }
+    public string Archetype { get; init; } = string.Empty;
+    public string Language { get; init; } = string.Empty;
+    public string? Framework { get; init; }
+    public string PrinciplesFile { get; init; } = string.Empty;
+    public LibrariesSection Libraries { get; init; } = new();
+    public IReadOnlyDictionary<string, string> MinimumVersions { get; init; } = FrozenDictionary<string, string>.Empty;
 }
 
-public sealed class LibrariesSection
+public sealed record LibrariesSection
 {
-    public string Preferred { get; set; } = string.Empty;
-    public List<string> Acceptable { get; set; } = new();
-    public List<AvoidedLibrary> Avoid { get; set; } = new();
+    public string Preferred { get; init; } = string.Empty;
+    public IReadOnlyList<string> Acceptable { get; init; } = [];
+    public IReadOnlyList<AvoidedLibrary> Avoid { get; init; } = [];
 }
 
-public sealed class AvoidedLibrary
+public sealed record AvoidedLibrary
 {
-    public string Name { get; set; } = string.Empty;
-    public string Reason { get; set; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string Reason { get; init; } = string.Empty;
 }

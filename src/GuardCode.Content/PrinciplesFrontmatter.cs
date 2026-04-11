@@ -1,24 +1,22 @@
-// YamlDotNet requires concrete mutable collection types for deserialization.
-#pragma warning disable CA1002 // Do not expose generic lists
-#pragma warning disable CA2227 // Collection properties should be read only
+using System.Collections.Frozen;
 
 namespace GuardCode.Content;
 
 /// <summary>
 /// Typed YAML frontmatter for an archetype's <c>_principles.md</c> file.
-/// Fields map 1:1 to design spec §4.1. Property initialization with
-/// <c>required</c> is enforced by the strict YamlDotNet deserializer
-/// configured in <c>Loading.FrontmatterParser</c>.
+/// Fields map 1:1 to design spec §4.1. Immutable record projected from
+/// a file-scoped mutable DTO inside <c>Loading.FrontmatterParser</c>
+/// after strict YamlDotNet deserialization.
 /// </summary>
-public sealed class PrinciplesFrontmatter
+public sealed record PrinciplesFrontmatter
 {
-    public int SchemaVersion { get; set; }
-    public string Archetype { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string Summary { get; set; } = string.Empty;
-    public List<string> AppliesTo { get; set; } = new();
-    public List<string> Keywords { get; set; } = new();
-    public List<string> RelatedArchetypes { get; set; } = new();
-    public Dictionary<string, string> EquivalentsIn { get; set; } = new();
-    public Dictionary<string, string> References { get; set; } = new();
+    public int SchemaVersion { get; init; }
+    public string Archetype { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Summary { get; init; } = string.Empty;
+    public IReadOnlyList<string> AppliesTo { get; init; } = [];
+    public IReadOnlyList<string> Keywords { get; init; } = [];
+    public IReadOnlyList<string> RelatedArchetypes { get; init; } = [];
+    public IReadOnlyDictionary<string, string> EquivalentsIn { get; init; } = FrozenDictionary<string, string>.Empty;
+    public IReadOnlyDictionary<string, string> References { get; init; } = FrozenDictionary<string, string>.Empty;
 }

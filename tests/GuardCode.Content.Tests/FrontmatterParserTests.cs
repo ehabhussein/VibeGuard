@@ -40,7 +40,7 @@ public class FrontmatterParserTests
     [Fact]
     public void Parse_ValidPrinciples_ReturnsFrontmatterAndBody()
     {
-        var result = FrontmatterParser.Parse<PrinciplesFrontmatter>(ValidPrinciples);
+        var result = FrontmatterParser.ParsePrinciples(ValidPrinciples);
 
         result.Frontmatter.SchemaVersion.Should().Be(1);
         result.Frontmatter.Archetype.Should().Be("auth/password-hashing");
@@ -59,7 +59,7 @@ public class FrontmatterParserTests
     public void Parse_MissingOpeningDelimiter_Throws()
     {
         const string content = "no frontmatter here\njust body.";
-        var act = () => FrontmatterParser.Parse<PrinciplesFrontmatter>(content);
+        var act = () => FrontmatterParser.ParsePrinciples(content);
         act.Should().Throw<FrontmatterParseException>()
            .WithMessage("*does not begin*");
     }
@@ -73,7 +73,7 @@ public class FrontmatterParserTests
             schema_version: 1
             archetype: x/y
             """;
-        var act = () => FrontmatterParser.Parse<PrinciplesFrontmatter>(content);
+        var act = () => FrontmatterParser.ParsePrinciples(content);
         act.Should().Throw<FrontmatterParseException>()
            .WithMessage("*not closed*");
     }
@@ -95,7 +95,7 @@ public class FrontmatterParserTests
 
             body
             """;
-        var act = () => FrontmatterParser.Parse<PrinciplesFrontmatter>(content);
+        var act = () => FrontmatterParser.ParsePrinciples(content);
         act.Should().Throw<FrontmatterParseException>()
            .WithMessage("*malformed or contains unknown fields*");
     }
@@ -111,7 +111,7 @@ public class FrontmatterParserTests
 
             body
             """;
-        var act = () => FrontmatterParser.Parse<PrinciplesFrontmatter>(content);
+        var act = () => FrontmatterParser.ParsePrinciples(content);
         act.Should().Throw<FrontmatterParseException>();
     }
 }
