@@ -5,11 +5,34 @@ namespace GuardCode.Content.Loading;
 /// <summary>
 /// Walks the archetypes root directory, loads every archetype, runs
 /// validation, and returns the result. Implements the path-traversal
-/// defense from design spec §6.1 by verifying every resolved file path
-/// sits strictly under the root.
+/// defense from design spec §6.1 with two layers:
+///
+/// 1. Enumeration skips reparse points (symlinks and junctions), so a
+///    directory symlink inside the root cannot redirect the loader to
+///    content outside the root.
+/// 2. Every enumerated file path is re-normalized via
+///    <see cref="Path.GetFullPath(string)"/> and verified to start
+///    with the root's full path. The root is stored with a trailing
+///    separator to prevent prefix confusion
+///    (e.g., <c>/foo/bar</c> matching <c>/foo/barbaz</c>).
+///
+/// Threat model: an operator-controlled content directory with
+/// potentially adversarial archetype files. Not hardened against an
+/// attacker who can create reparse points inside the root concurrently
+/// with loading (time-of-check/time-of-use races are out of scope for
+/// a synchronous startup-time loader).
 /// </summary>
 public sealed class FileSystemArchetypeRepository : IArchetypeRepository
 {
+    private static readonly EnumerationOptions MarkdownEnumerationOptions = new()
+    {
+        RecurseSubdirectories = true,
+        IgnoreInaccessible = true,
+        AttributesToSkip = FileAttributes.ReparsePoint | FileAttributes.Hidden | FileAttributes.System,
+        MatchCasing = MatchCasing.PlatformDefault,
+        ReturnSpecialDirectories = false,
+    };
+
     private readonly string _rootFullPath;
 
     public FileSystemArchetypeRepository(string rootPath)
@@ -33,7 +56,7 @@ public sealed class FileSystemArchetypeRepository : IArchetypeRepository
         var archetypes = new List<Archetype>();
         foreach (var (directory, files) in filesByDirectory)
         {
-            if (!files.ContainsKey("_principles.md")) continue;
+            if (!files.ContainsKey(ArchetypeLoader.PrinciplesFilename)) continue;
 
             var archetypeId = DeriveArchetypeId(directory);
             var (archetype, rawLineCounts) = ArchetypeLoader.LoadWithLineCounts(archetypeId, files);
@@ -49,14 +72,10 @@ public sealed class FileSystemArchetypeRepository : IArchetypeRepository
     {
         var filesByDirectory = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
 
-        foreach (var file in Directory.EnumerateFiles(_rootFullPath, "*.md", SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(_rootFullPath, "*.md", MarkdownEnumerationOptions))
         {
             var fullPath = Path.GetFullPath(file);
-            if (!fullPath.StartsWith(_rootFullPath, StringComparison.Ordinal))
-            {
-                throw new ArchetypeLoadException(
-                    $"refusing to load file outside archetypes root: {fullPath}");
-            }
+            EnsureUnderRoot(_rootFullPath, fullPath);
 
             var directory = Path.GetDirectoryName(fullPath)!;
             if (!filesByDirectory.TryGetValue(directory, out var map))
@@ -68,6 +87,15 @@ public sealed class FileSystemArchetypeRepository : IArchetypeRepository
         }
 
         return filesByDirectory;
+    }
+
+    internal static void EnsureUnderRoot(string rootFullPath, string candidateFullPath)
+    {
+        if (!candidateFullPath.StartsWith(rootFullPath, StringComparison.Ordinal))
+        {
+            throw new ArchetypeLoadException(
+                $"refusing to load file outside archetypes root: {candidateFullPath}");
+        }
     }
 
     private string DeriveArchetypeId(string fullDirectory)

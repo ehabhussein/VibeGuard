@@ -12,7 +12,7 @@ namespace GuardCode.Content.Loading;
 /// </summary>
 public static class ArchetypeLoader
 {
-    private const string PrinciplesFilename = "_principles.md";
+    internal const string PrinciplesFilename = "_principles.md";
     private const string MarkdownExtension = ".md";
 
     public static Archetype Load(

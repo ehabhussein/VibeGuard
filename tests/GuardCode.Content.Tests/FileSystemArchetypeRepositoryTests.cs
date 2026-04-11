@@ -154,4 +154,28 @@ public sealed class FileSystemArchetypeRepositoryTests : IDisposable
 
         archetypes.Should().BeEmpty();
     }
+
+    [Fact]
+    public void EnsureUnderRoot_CandidateInsideRoot_DoesNotThrow()
+    {
+        var root = Path.GetFullPath(_rootDir) + Path.DirectorySeparatorChar;
+        var candidate = Path.Combine(root, "auth", "password-hashing", "csharp.md");
+
+        var act = () => FileSystemArchetypeRepository.EnsureUnderRoot(root, candidate);
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void EnsureUnderRoot_CandidateOutsideRoot_Throws()
+    {
+        var root = Path.GetFullPath(_rootDir) + Path.DirectorySeparatorChar;
+        // A hand-constructed absolute path that lexically lives outside the root.
+        var candidate = Path.GetFullPath(Path.Combine(_rootDir, "..", "evil.md"));
+
+        var act = () => FileSystemArchetypeRepository.EnsureUnderRoot(root, candidate);
+
+        act.Should().Throw<ArchetypeLoadException>()
+            .WithMessage("*refusing to load file outside archetypes root*");
+    }
 }
