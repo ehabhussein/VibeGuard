@@ -54,7 +54,9 @@ GuardCode is **not**:
 ```
 
 - **Archetypes** are directories under `archetypes/` containing a `_principles.md` (language-agnostic) and one markdown file per supported language. Each archetype covers one focused topic: password hashing, input validation, error handling, etc.
-- **Indexing** happens once at startup. The full corpus is loaded, validated strictly (YAML frontmatter schema, body-length budgets, reference-implementation size caps, orphan-reference detection), and frozen into an immutable in-memory index. If anything fails validation the server refuses to start and writes a diagnostic to stderr.
+- **Lifecycle** is explicit in every archetype's frontmatter: `draft`, `stable`, or `deprecated`. Drafts are validated on every build but hidden from the active corpus by default, so half-finished guidance never reaches an LLM. Stable content is the default delivery target. Deprecated archetypes still serve their content but prepend a `> **DEPRECATED**` banner that names the successor, so clients can steer users toward the replacement without hard-failing older sessions.
+- **Indexing** happens once at startup. The full corpus is loaded, validated strictly (YAML frontmatter schema, body-length budgets, reference-implementation size caps, orphan-reference detection, lifecycle field requirements), and frozen into an immutable in-memory index. If anything fails validation the server refuses to start and writes a diagnostic to stderr.
+- **Server instructions** are sent to the LLM during the MCP handshake. Any MCP-aware client surfaces them as a system-prompt fragment that tells the model *when* to call `prep` — before writing any security-sensitive or architecturally-interesting function — so it reaches for GuardCode on its own instead of waiting to be told.
 - **`prep`** scores archetypes against the LLM's natural-language intent using keyword matching and returns up to 8 candidates, highest-scoring first. No network, no model, fully deterministic.
 - **`consult`** composes the principles file with the language file into one markdown payload. If the archetype doesn't cover the requested language, it returns a redirect with a suggested alternative when one exists.
 
@@ -124,9 +126,34 @@ If the archetype doesn't cover the requested language, `content` is null, `redir
 
 ### Prerequisites
 
-- **.NET 10 SDK** or later — download from [dotnet.microsoft.com/download](https://dotnet.microsoft.com/download).
-- **Git**.
 - An MCP-aware client (Claude Desktop, Claude Code, Cursor, or anything that speaks MCP stdio).
+- For the **pre-built binary** path: nothing else. Releases are self-contained.
+- For the **build from source** path: **.NET 10 SDK** or later — download from [dotnet.microsoft.com/download](https://dotnet.microsoft.com/download) — and **Git**.
+
+### Install a pre-built binary (recommended)
+
+Grab the latest release from the [GitHub Releases page](https://github.com/ehabhussein/GuardCode/releases). Each release ships self-contained single-file binaries for six platforms, with the archetype corpus bundled alongside the executable:
+
+| Platform          | Archive                                       |
+|-------------------|-----------------------------------------------|
+| Windows x64       | `guardcode-mcp-<version>-win-x64.zip`         |
+| Windows ARM64     | `guardcode-mcp-<version>-win-arm64.zip`       |
+| Linux x64         | `guardcode-mcp-<version>-linux-x64.tar.gz`    |
+| Linux ARM64       | `guardcode-mcp-<version>-linux-arm64.tar.gz`  |
+| macOS x64 (Intel) | `guardcode-mcp-<version>-osx-x64.tar.gz`      |
+| macOS ARM64       | `guardcode-mcp-<version>-osx-arm64.tar.gz`    |
+
+Download the archive for your platform, extract it to a stable location (e.g. `C:\Tools\guardcode` on Windows, `~/.local/share/guardcode` on Linux/macOS), and wire the full path to `guardcode-mcp` / `guardcode-mcp.exe` into your MCP client — see [Wiring into an MCP client](#wiring-into-an-mcp-client).
+
+On Linux and macOS, mark the binary as executable after extracting:
+
+```bash
+chmod +x ~/.local/share/guardcode/guardcode-mcp
+```
+
+The Unix archives (`.tar.gz`) preserve the execute bit; the Windows `.zip` archives do not need to because `.exe` is executable by extension.
+
+No runtime dependencies. The binary includes the .NET runtime via self-contained publish, so you do not need the .NET SDK installed to run it.
 
 ### Build from source
 
@@ -162,6 +189,17 @@ dotnet run --project src/GuardCode.Mcp
 ```
 
 On success the server loads the corpus, binds stdio, and waits silently for MCP protocol frames. Everything written to **stdout** is MCP wire format; all logs go to **stderr**. If the corpus fails to load you will see a diagnostic on stderr and the process exits with code 1. Press `Ctrl+C` to stop.
+
+### Why stdio, not HTTP?
+
+GuardCode only supports stdio transport. That is deliberate. MCP defines two wire transports — stdio and Streamable HTTP — and for a local developer tool that lives next to the IDE, stdio is strictly better:
+
+- **Zero configuration.** No port to pick, no port to conflict with, no firewall rule, no TLS cert, no auth story. The client spawns a subprocess and pipes frames across stdin/stdout.
+- **No daemon.** The server only exists while the client is running. When you quit Claude Desktop, the server exits with it. Nothing lingers, nothing leaks file handles, nothing runs on your machine when you are not using it.
+- **Local by construction.** An HTTP server accidentally bound to `0.0.0.0` is a footgun. A stdio server cannot be reached from another process, let alone another machine, so there is no "did I misconfigure auth" question to answer.
+- **Faster.** No handshake overhead, no HTTP framing, no connection reuse logic. The MCP message is the entire wire cost.
+
+If GuardCode ever needs to serve remote clients — a shared team instance, a CI runner — Streamable HTTP is the intended path, and the server can be extended to carry both transports under the same tool implementations. The MVP does not, because nothing in the MVP benefits from it.
 
 ## Wiring into an MCP client
 
@@ -309,13 +347,15 @@ With the principles and reference implementation in its context window the LLM n
 
 The MVP is deliberately small — three archetypes that prove the plumbing and demonstrate the content format. Community contributions are how the corpus grows from here.
 
-| Archetype                  | Principles | Language files              |
-|----------------------------|------------|------------------------------|
-| `auth/password-hashing`    | yes        | `csharp`, `python`           |
-| `io/input-validation`      | yes        | `csharp`, `python`, `c`      |
-| `errors/error-handling`    | yes        | `csharp`, `go`               |
+| Archetype                  | Status | Principles | Language files              |
+|----------------------------|--------|------------|------------------------------|
+| `auth/password-hashing`    | stable | yes        | `csharp`, `python`           |
+| `io/input-validation`      | stable | yes        | `csharp`, `python`, `c`      |
+| `errors/error-handling`    | stable | yes        | `csharp`, `go`               |
 
 Every archetype ships a `_principles.md` file (universal architectural guidance, references to OWASP ASVS / cheat sheets / CWE) plus one language file per supported target. Adding a language file to an existing archetype is usually the easiest first contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+All three launch archetypes are `stable`, meaning they have been reviewed and are visible to LLM clients by default. New archetypes are expected to land as `draft` first and graduate through review — see the **Archetype lifecycle** section in [CONTRIBUTING.md](CONTRIBUTING.md) for the full flow. If you want to see drafts locally while developing content, launch the server with `GUARDCODE_INCLUDE_DRAFTS=1` in its environment.
 
 ## Architecture
 
@@ -348,11 +388,19 @@ See [`docs/superpowers/specs/2026-04-11-guardcode-design.md`](docs/superpowers/s
 
 ## Configuration reference
 
+### Archetype root
+
 The server resolves the archetype root with the following precedence (first match wins):
 
 1. **Environment variable** `GUARDCODE_ARCHETYPES_ROOT` — absolute, or relative to the current working directory.
 2. **`appsettings.json`** key `GuardCode:ArchetypesRoot` — absolute, or relative to the executable.
 3. **Default** — `archetypes/` next to the executable (where `dotnet build` copies the corpus).
+
+### Lifecycle filter
+
+| Variable                   | Default  | Effect                                                                                             |
+|----------------------------|----------|----------------------------------------------------------------------------------------------------|
+| `GUARDCODE_INCLUDE_DRAFTS` | *(unset)* | Drafts are parsed and validated but hidden from the active corpus. Set to any non-empty value to include drafts in `prep` results and make them resolvable via `consult`. Intended for local content development, not production. |
 
 Example `appsettings.json`:
 
@@ -394,11 +442,12 @@ You need the .NET 10 SDK. `dotnet --list-sdks` should include a 10.x entry.
 
 The MVP proves the shape. The next steps are about growing the content and widening the supported targets.
 
-- **Corpus expansion** — more archetypes: `auth/session-tokens`, `persistence/sql-access`, `concurrency/shared-state`, `logging/structured-logging`, and a long tail of topics the community cares about.
+- **Corpus expansion** — more archetypes: `auth/session-tokens`, `auth/api-endpoint-authentication`, `persistence/sql-access`, `persistence/secrets-handling`, `io/path-traversal`, `io/deserialization`, `net/ssrf`, `net/tls-config`, `concurrency/shared-state`, `logging/structured-logging`, and a long tail of topics the community cares about. This is the most load-bearing roadmap item — GuardCode's value scales with corpus depth.
 - **More languages** — JavaScript/TypeScript, Java, Rust are the obvious next targets. Each is a content PR, not a code PR.
 - **Smarter prep scoring** — optional embedding-based retrieval as a sibling of the keyword scorer, gated behind a config flag so the deterministic path remains the default.
 - **Framework awareness** — the `framework` parameter on `prep` is already accepted on the wire; activating it means adding per-framework sub-files or frontmatter.
 - **Content review tooling** — a lightweight linter for PRs that runs the same validator the server runs at startup, so contributors see errors before pushing.
+- **Streamable HTTP transport** — for team or CI deployments that need a shared GuardCode instance. Stdio remains the default for local use; HTTP would be an alternative transport over the same tool implementations.
 
 Tracked in GitHub issues. If you want to help with any of these, open an issue first so we can align on scope.
 
