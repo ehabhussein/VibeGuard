@@ -1,3 +1,69 @@
-// Placeholder — replaced in Task 11 (composition root).
-System.Console.Error.WriteLine("guardcode-mcp: composition root not yet implemented");
-return 1;
+using GuardCode.Content.Indexing;
+using GuardCode.Content.Loading;
+using GuardCode.Content.Services;
+using GuardCode.Content.Validation;
+using GuardCode.Mcp;
+using Microsoft.Extensions.Configuration;
+
+var builder = Host.CreateApplicationBuilder(args);
+
+// Stdio is reserved for the MCP protocol. All logging MUST go to stderr.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole(options =>
+{
+    options.LogToStandardErrorThreshold = LogLevel.Trace;
+});
+
+// Resolve the archetypes root once at startup. Precedence:
+// 1. Environment variable GUARDCODE_ARCHETYPES_ROOT (absolute or relative to cwd)
+// 2. appsettings.json "GuardCode:ArchetypesRoot"
+// 3. "archetypes" next to the executable
+var configured = Environment.GetEnvironmentVariable("GUARDCODE_ARCHETYPES_ROOT")
+    ?? builder.Configuration["GuardCode:ArchetypesRoot"]
+    ?? "archetypes";
+var archetypesRoot = Path.IsPathRooted(configured)
+    ? configured
+    : Path.GetFullPath(configured, AppContext.BaseDirectory);
+
+builder.Services
+    .AddSingleton<IArchetypeRepository>(_ => new FileSystemArchetypeRepository(archetypesRoot))
+    .AddSingleton<IArchetypeIndex>(sp =>
+    {
+        var repo = sp.GetRequiredService<IArchetypeRepository>();
+        return KeywordArchetypeIndex.Build(repo.LoadAll());
+    })
+    .AddSingleton<IPrepService, PrepService>()
+    .AddSingleton<IConsultationService, ConsultationService>();
+
+builder.Services
+    .AddMcpServer()
+    .WithStdioServerTransport()
+    .WithToolsFromAssembly();
+
+var host = builder.Build();
+
+// Force-load the index synchronously before entering the event loop so that
+// any content validation error aborts startup with a clear stderr message
+// instead of surfacing during the first MCP call. The host is disposed on
+// the failure path so the console logger provider flushes its background
+// queue before the process exits.
+try
+{
+    _ = host.Services.GetRequiredService<IArchetypeIndex>();
+}
+catch (Exception ex) when (
+    ex is IOException
+    or UnauthorizedAccessException
+    or ArgumentException
+    or ArchetypeLoadException
+    or FrontmatterParseException
+    or ArchetypeValidationException)
+{
+    var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("GuardCode.Startup");
+    StartupLogging.CorpusLoadFailed(logger, archetypesRoot, ex);
+    await ((IAsyncDisposable)host).DisposeAsync().ConfigureAwait(false);
+    return 1;
+}
+
+await host.RunAsync().ConfigureAwait(false);
+return 0;
