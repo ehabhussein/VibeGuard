@@ -11,7 +11,7 @@ Website: [guardvibe.codes](https://guardvibe.codes)
 
 VibeGuard is an open-source [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that gives any LLM a high-to-low-level engineering consultant it can call **before** writing a function or class. It ships human-authored guidance — principles, architectural placement, anti-patterns, library choices, and language-specific gotchas — organized into focused **archetypes** that the LLM retrieves through two deterministic tools: `prep` and `consult`.
 
-The intelligence lives in the content, not the server. Everything VibeGuard knows is written by humans, reviewed through pull requests, and validated at load time. There is no model and no inference inside the server — just a fast index over a corpus of markdown.
+The intelligence lives in the content, not the server. Everything VibeGuard knows is written by humans, reviewed through pull requests, and validated at load time. The server bundles a small ONNX embedding model (all-MiniLM-L6-v2, ~87 MB) for semantic search but performs no generative inference — the model only produces vector similarity scores to rank archetypes against intent.
 
 > **You don't call `prep` or `consult` yourself.** VibeGuard ships an instruction prompt to every MCP-aware client during the protocol handshake. Compliant clients (Claude Desktop, Claude Code, Cursor, VS Code) surface that prompt to the LLM as a system message telling the model to reach for VibeGuard on its own — before writing any security- or architecture-sensitive code. Once VibeGuard is installed in your MCP client, **just code normally**. The LLM consults it automatically. The `prep` / `consult` sections below are an API reference for the LLM (and for MCP client developers), not a set of commands you need to type.
 
@@ -46,7 +46,7 @@ The fix is to give the LLM a place to consult *before* it writes the function. T
 VibeGuard is **not**:
 
 - A static analyzer or SAST wrapper — false-positive generators do not help.
-- An LLM — the server contains no model and performs no inference.
+- An LLM — the server performs no generative inference. It bundles a small embedding model for search ranking only.
 - A CWE-per-line ruleset — rules cannot teach architecture.
 - Opinionated about how your LLM uses the guidance — enforcement is downstream.
 
@@ -61,7 +61,7 @@ VibeGuard is **not**:
 - **Lifecycle** is explicit in every archetype's frontmatter: `draft`, `stable`, or `deprecated`. Drafts are validated on every build but hidden from the active corpus by default, so half-finished guidance never reaches an LLM. Stable content is the default delivery target. Deprecated archetypes still serve their content but prepend a `> **DEPRECATED**` banner that names the successor, so clients can steer users toward the replacement without hard-failing older sessions.
 - **Indexing** happens once at startup. The full corpus is loaded, validated strictly (YAML frontmatter schema, body-length budgets, reference-implementation size caps, orphan-reference detection, lifecycle field requirements), and frozen into an immutable in-memory index. If anything fails validation the server refuses to start and writes a diagnostic to stderr.
 - **Server instructions** are sent to the LLM during the MCP handshake. Any MCP-aware client surfaces them as a system-prompt fragment that tells the model *when* to call `prep` — before writing any security-sensitive or architecturally-interesting function — so it reaches for VibeGuard on its own instead of waiting to be told.
-- **`prep`** scores archetypes against the LLM's natural-language intent using keyword matching and returns up to 8 candidates, highest-scoring first. No network, no model, fully deterministic.
+- **`prep`** scores archetypes against the LLM's natural-language intent using hybrid search — keyword matching (30% weight) blended with semantic similarity via a local ONNX embedding model (70% weight) — and returns up to 8 candidates, highest-scoring first. Scores are in the 0–1 range. No network calls; all inference runs locally.
 - **`consult`** composes the principles file with the language file into one markdown payload. Language-agnostic archetypes (`applies_to: [all]`) return principles only — architectural guidance without code examples. If a language-specific archetype doesn't cover the requested language, it returns a redirect with a suggested alternative when one exists.
 
 ## The two tools
@@ -85,7 +85,7 @@ Response shape:
       "archetype": "auth/password-hashing",
       "title": "Password Hashing",
       "summary": "Storing, verifying, and handling user passwords in any backend.",
-      "score": 4.0
+      "score": 0.82
     }
   ],
   "error": null
@@ -339,7 +339,7 @@ Assume the LLM is about to write a Python login handler.
       "archetype": "auth/password-hashing",
       "title": "Password Hashing",
       "summary": "Storing, verifying, and handling user passwords in any backend.",
-      "score": 6.0
+      "score": 0.91
     }
   ],
   "error": null
@@ -466,8 +466,9 @@ VibeGuard is three .NET projects:
 ```
 src/
   VibeGuard.Content/     Domain types, YAML loader, strict validator, keyword
-                         index, prep + consult services. Pure library. No I/O
-                         except the filesystem repository.
+                         and embedding indexes, hybrid search, prep + consult
+                         services. Pure library. Bundles all-MiniLM-L6-v2 ONNX
+                         model as an embedded resource for local inference.
   VibeGuard.Mcp/         Composition root (Generic Host / WebApplication +
                          Serilog), MCP tool handlers (`prep`, `consult`),
                          dual transport (stdio + Streamable HTTP).
@@ -480,7 +481,7 @@ tests/
 
 Design notes:
 
-- **Deterministic by construction.** The index is an immutable `FrozenDictionary` built once at startup from an immutable input set. There is no runtime mutation. Same corpus in → same answers out.
+- **Immutable at runtime.** Both the keyword index and the embedding index are immutable `FrozenDictionary` instances built once at startup. The ONNX embedding model (all-MiniLM-L6-v2, 384-dim) runs locally with no network calls. Hybrid scoring blends keyword hits (30%) with cosine similarity (70%) to surface archetypes even when the intent phrasing doesn't contain exact keywords.
 - **Strict content validation.** YamlDotNet runs with no `IgnoreUnmatchedProperties`. Unknown frontmatter keys, missing required fields, body overflows, and orphan `related_archetypes` references all fail the load. If startup validation passes, the corpus is known-good.
 - **File-bound DTOs.** YAML deserialization targets use C# `file`-scoped types so mutability required by the deserializer never leaks onto the public domain surface — the public records are immutable with `IReadOnlyList` / `IReadOnlyDictionary` collections.
 - **Central Package Management.** Every NuGet version lives in `Directory.Packages.props`. csproj files reference packages by ID only.
@@ -569,7 +570,7 @@ Check the client's MCP log. Most clients surface the server's stderr there. Vibe
 VibeGuard refuses to start with a broken corpus. The stderr diagnostic includes the file path and the validation rule that failed (unknown frontmatter key, body over budget, orphan reference, malformed YAML, etc.). Fix the content and restart. This is by design — it is much better to fail loudly at startup than to serve broken guidance during an MCP call.
 
 **"`prep` returns no matches for an intent that should match."**
-The MVP scorer is a keyword index, not an embedding model. It matches when the intent string contains words listed in the archetype's `keywords:` frontmatter or in the title/summary. If a reasonable intent returns nothing, the archetype's `keywords:` list is probably too narrow — file an issue or open a PR that adds the missing terms.
+The scorer uses hybrid search: keyword matching (30%) blended with semantic similarity from a local ONNX embedding model (70%). If a reasonable intent returns nothing, the archetype's `keywords:` list may be too narrow or the summary may not be semantically close enough to the intent — file an issue or open a PR that improves the terms or summary.
 
 **`language '<x>' is not supported. Expected one of: ...`.**
 The language set is configurable. By default it is `csharp`, `python`, `c`, `go`, `rust` — the error message lists whichever set the running server was configured with, so a deployment that narrowed it will say so. To add a language, extend the set via `VIBEGUARD_SUPPORTED_LANGUAGES` or `VibeGuard:SupportedLanguages` in `appsettings.json`, ship the matching language files in the corpus, and restart the server. See [Configuration reference — Supported languages](#supported-languages).
@@ -589,7 +590,6 @@ The corpus has grown from 3 to 37 archetypes across 10 categories. The next step
 
 - **Corpus depth** — fill language gaps (Rust and C coverage is thinner than C#/Python/Go), and add new archetypes as the community identifies topics. VibeGuard's value scales with corpus depth.
 - **More languages** — JavaScript/TypeScript, Java, Kotlin, and Swift are the obvious next targets. Adding a language is a content PR plus (optionally) a one-line config change to extend `VIBEGUARD_SUPPORTED_LANGUAGES`; the server itself has no enum to edit.
-- **Smarter prep scoring** — optional embedding-based retrieval as a sibling of the keyword scorer, gated behind a config flag so the deterministic path remains the default.
 - **Framework awareness** — the `framework` parameter on `prep` is already accepted on the wire; activating it means adding per-framework sub-files or frontmatter.
 - **Content review tooling** — a lightweight linter for PRs that runs the same validator the server runs at startup, so contributors see errors before pushing.
 Tracked in GitHub issues. If you want to help with any of these, open an issue first so we can align on scope.
@@ -629,7 +629,7 @@ Be kind, be specific, and assume good faith. Disagreements about content are hea
 
 If you discover a security issue — either in the server code itself or in guidance that would actively lead an LLM to write insecure code — please **do not** open a public issue. Email the maintainer directly (see the repository profile for contact) with a clear description and, if possible, a reproduction. You will get an acknowledgment within a reasonable window and a fix will be prioritized.
 
-The server itself has a small attack surface by design: it speaks MCP over stdio, does no network I/O, loads only the files under its configured archetype root, and performs no code execution. The likeliest security-relevant bugs are path-handling issues in the loader — those are treated as high priority.
+The server itself has a small attack surface by design: it speaks MCP over stdio or HTTP, does no outbound network I/O (the ONNX embedding model runs locally), loads only the files under its configured archetype root, and performs no code execution. The likeliest security-relevant bugs are path-handling issues in the loader — those are treated as high priority.
 
 ## License
 
