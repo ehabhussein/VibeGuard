@@ -351,7 +351,7 @@ With the principles and reference implementation in its context window the LLM n
 
 ## What ships in the corpus
 
-The corpus ships **30 archetypes** across 9 categories — 3 stable and 27 in draft. Stable archetypes are visible to LLM clients by default; drafts are validated on every build but hidden from `prep` results unless you opt in with `VIBEGUARD_INCLUDE_DRAFTS=1`.
+The corpus ships **31 archetypes** across 10 categories — 3 stable and 28 in draft. Stable archetypes are visible to LLM clients by default; drafts are validated on every build but hidden from `prep` results unless you opt in with `VIBEGUARD_INCLUDE_DRAFTS=1`.
 
 **Stable (default-visible to clients):**
 
@@ -392,6 +392,7 @@ The corpus ships **30 archetypes** across 9 categories — 3 stable and 27 in dr
 | **memory**     | `memory/buffer-overflow`           | `c`, `rust`, `go`           |
 |                | `memory/use-after-free`            | `c`, `rust`                 |
 | **concurrency**| `concurrency/race-conditions`      | `csharp`, `python`, `go`    |
+| **architecture**| `architecture/secure-development-lifecycle` | `all` (principles only) |
 
 Every archetype ships a `_principles.md` file (language-agnostic architectural guidance, references to OWASP ASVS / cheat sheets / CWE) plus one markdown file per supported language. Some archetypes use `applies_to: [all]` to deliver principles-only guidance that applies regardless of language — these return architectural advice without code examples.
 
@@ -496,7 +497,7 @@ You need the .NET 10 SDK. `dotnet --list-sdks` should include a 10.x entry.
 
 ## Roadmap
 
-The corpus has grown from 3 to 30 archetypes across 9 categories. The next steps are about deepening coverage and widening the supported targets.
+The corpus has grown from 3 to 31 archetypes across 10 categories. The next steps are about deepening coverage and widening the supported targets.
 
 - **Corpus depth** — promote drafts to stable through review, fill language gaps (Rust and C coverage is thinner than C#/Python/Go), and add new archetypes as the community identifies topics. VibeGuard's value scales with corpus depth.
 - **More languages** — JavaScript/TypeScript, Java, Kotlin, and Swift are the obvious next targets. Adding a language is a content PR plus (optionally) a one-line config change to extend `VIBEGUARD_SUPPORTED_LANGUAGES`; the server itself has no enum to edit.
