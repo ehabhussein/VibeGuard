@@ -413,47 +413,70 @@ With the principles and reference implementation in its context window the LLM n
 
 ## What ships in the corpus
 
-The corpus ships **37 stable archetypes** across 10 categories. All archetypes are visible to LLM clients by default.
+The corpus ships **60 stable archetypes** across 10 categories and **198 language files** spanning 11 languages. All archetypes are visible to LLM clients by default.
 
-| Category       | Archetype                          | Language files              |
-|----------------|------------------------------------|-----------------------------|
-| **auth**       | `auth/password-hashing`            | `csharp`, `python`, `go`    |
-|                | `auth/api-endpoint-authentication` | `csharp`, `python`          |
-|                | `auth/authorization`               | `csharp`, `python`          |
-|                | `auth/session-tokens`              | `csharp`, `python`, `go`    |
-|                | `auth/mfa`                         | `csharp`, `python`, `go`    |
-|                | `auth/oauth-integration`           | `csharp`, `python`, `go`    |
-| **crypto**     | `crypto/symmetric-encryption`      | `csharp`, `python`          |
-|                | `crypto/random-number-generation`  | `csharp`, `python`, `go`    |
-|                | `crypto/tls-configuration`         | `csharp`, `python`, `go`    |
-|                | `crypto/key-management`            | `csharp`, `python`, `go`    |
-| **http**       | `http/ssrf`                        | `csharp`, `python`          |
-|                | `http/xss`                         | `csharp`, `python`, `go`    |
-|                | `http/csrf`                        | `csharp`, `python`, `go`    |
-|                | `http/security-headers`            | `csharp`, `python`, `go`    |
-|                | `http/cors`                        | `csharp`, `python`, `go`    |
-| **io**         | `io/input-validation`              | `csharp`, `python`, `c`, `go`    |
-|                | `io/path-traversal`                | `csharp`, `python`          |
-|                | `io/unsafe-deserialization`        | `csharp`, `python`          |
-|                | `io/command-injection`             | `csharp`, `python`, `go`    |
-|                | `io/file-upload`                   | `csharp`, `python`, `go`    |
-| **persistence**| `persistence/secrets-handling`     | `csharp`, `python`          |
-|                | `persistence/sql-injection`        | `csharp`, `python`, `rust`  |
-|                | `persistence/orm-security`         | `csharp`, `python`, `go`    |
-|                | `persistence/dependency-management`| `csharp`, `python`, `go`    |
-| **errors**     | `errors/error-handling`            | `csharp`, `python`, `c`, `go`    |
-| **logging**    | `logging/sensitive-data`           | `csharp`, `python`          |
-|                | `logging/audit-trail`              | `csharp`, `python`, `go`    |
-| **memory**     | `memory/buffer-overflow`           | `c`, `rust`, `go`           |
-|                | `memory/use-after-free`            | `c`, `rust`                 |
-| **concurrency**| `concurrency/race-conditions`      | `csharp`, `python`, `go`    |
-| **architecture**| `architecture/secure-development-lifecycle` | `all` (principles only) |
-|                | `architecture/threat-modeling`              | `all` (principles only) |
-|                | `architecture/defense-in-depth`             | `all` (principles only) |
-|                | `architecture/secure-ci-cd`                 | `all` (principles only) |
-|                | `architecture/data-classification`          | `all` (principles only) |
-|                | `architecture/incident-response`            | `all` (principles only) |
-|                | `architecture/resilience-patterns`          | `all` (principles only) |
+| Category        | Archetype                           | Language files                                                      |
+|-----------------|-------------------------------------|---------------------------------------------------------------------|
+| **auth**        | `auth/password-hashing`             | `csharp`, `python`                                                  |
+|                 | `auth/api-endpoint-authentication`  | `csharp`, `python`                                                  |
+|                 | `auth/authorization`                | `csharp`, `python`                                                  |
+|                 | `auth/session-tokens`               | `csharp`, `go`, `python`                                            |
+|                 | `auth/mfa`                          | `csharp`, `go`, `python`                                            |
+|                 | `auth/oauth-integration`            | `csharp`, `go`, `python`                                            |
+|                 | `auth/jwt-handling`                 | `csharp`, `go`, `java`, `javascript`, `kotlin`, `php`, `python`, `ruby`, `typescript` |
+|                 | `auth/password-reset`               | `csharp`, `go`, `java`, `javascript`, `php`, `python`, `ruby`, `typescript` |
+|                 | `auth/rate-limiting`                | `csharp`, `go`, `java`, `javascript`, `php`, `python`, `ruby`, `typescript` |
+| **crypto**      | `crypto/symmetric-encryption`       | `csharp`, `python`                                                  |
+|                 | `crypto/random-number-generation`   | `csharp`, `go`, `python`                                            |
+|                 | `crypto/tls-configuration`          | `csharp`, `go`, `python`                                            |
+|                 | `crypto/key-management`             | `csharp`, `go`, `python`                                            |
+|                 | `crypto/asymmetric-encryption`      | `csharp`, `go`, `java`, `javascript`, `kotlin`, `python`, `rust`, `typescript` |
+|                 | `crypto/hashing-integrity`          | `c`, `csharp`, `go`, `java`, `javascript`, `kotlin`, `python`, `rust`, `typescript` |
+| **http**        | `http/ssrf`                         | `csharp`, `python`                                                  |
+|                 | `http/xss`                          | `csharp`, `go`, `python`                                            |
+|                 | `http/csrf`                         | `csharp`, `go`, `python`                                            |
+|                 | `http/security-headers`             | `csharp`, `go`, `python`                                            |
+|                 | `http/cors`                         | `csharp`, `go`, `python`                                            |
+|                 | `http/content-security-policy`      | `csharp`, `go`, `java`, `javascript`, `php`, `python`, `ruby`, `typescript` |
+|                 | `http/request-smuggling`            | `csharp`, `go`, `java`, `php`, `python`, `ruby`                     |
+| **io**          | `io/input-validation`               | `c`, `csharp`, `python`                                             |
+|                 | `io/path-traversal`                 | `csharp`, `python`                                                  |
+|                 | `io/unsafe-deserialization`         | `csharp`, `python`                                                  |
+|                 | `io/command-injection`              | `csharp`, `go`, `python`                                            |
+|                 | `io/file-upload`                    | `csharp`, `go`, `python`                                            |
+|                 | `io/email-injection`                | `csharp`, `go`, `java`, `javascript`, `php`, `python`, `ruby`       |
+|                 | `io/xml-injection`                  | `csharp`, `go`, `java`, `kotlin`, `php`, `python`, `ruby`           |
+|                 | `io/regex-dos`                      | `csharp`, `go`, `java`, `javascript`, `kotlin`, `php`, `python`, `ruby`, `typescript` |
+| **persistence** | `persistence/secrets-handling`      | `csharp`, `python`                                                  |
+|                 | `persistence/sql-injection`         | `csharp`, `python`, `rust`                                          |
+|                 | `persistence/orm-security`          | `csharp`, `go`, `python`                                            |
+|                 | `persistence/dependency-management` | `csharp`, `go`, `python`                                            |
+|                 | `persistence/database-connections`  | `csharp`, `go`, `java`, `javascript`, `kotlin`, `php`, `python`, `ruby`, `typescript` |
+|                 | `persistence/nosql-injection`       | `csharp`, `go`, `java`, `javascript`, `php`, `python`, `ruby`, `typescript` |
+| **errors**      | `errors/error-handling`             | `csharp`, `go`                                                      |
+| **logging**     | `logging/sensitive-data`            | `csharp`, `python`                                                  |
+|                 | `logging/audit-trail`               | `csharp`, `go`, `python`                                            |
+|                 | `logging/log-injection`             | `csharp`, `go`, `java`, `javascript`, `kotlin`, `php`, `python`, `ruby`, `typescript` |
+| **memory**      | `memory/buffer-overflow`            | `c`, `go`, `rust`                                                   |
+|                 | `memory/use-after-free`             | `c`, `rust`                                                         |
+| **concurrency** | `concurrency/race-conditions`       | `csharp`, `go`, `python`                                            |
+|                 | `concurrency/deadlock-prevention`   | `c`, `csharp`, `go`, `java`, `kotlin`, `python`, `rust`             |
+|                 | `concurrency/resource-exhaustion`   | `csharp`, `go`, `java`, `javascript`, `kotlin`, `python`, `typescript` |
+| **architecture**| `architecture/secure-development-lifecycle` | `all` (principles only)                                     |
+|                 | `architecture/threat-modeling`              | `all` (principles only)                                     |
+|                 | `architecture/defense-in-depth`             | `all` (principles only)                                     |
+|                 | `architecture/secure-ci-cd`                 | `all` (principles only)                                     |
+|                 | `architecture/data-classification`          | `all` (principles only)                                     |
+|                 | `architecture/incident-response`            | `all` (principles only)                                     |
+|                 | `architecture/resilience-patterns`          | `all` (principles only)                                     |
+|                 | `architecture/api-design-security`          | `all` (principles only)                                     |
+|                 | `architecture/container-security`           | `all` (principles only)                                     |
+|                 | `architecture/least-privilege`              | `all` (principles only)                                     |
+|                 | `architecture/microservice-security`        | `all` (principles only)                                     |
+|                 | `architecture/privacy-by-design`            | `all` (principles only)                                     |
+|                 | `architecture/secure-configuration`         | `all` (principles only)                                     |
+|                 | `architecture/supply-chain-security`        | `all` (principles only)                                     |
+|                 | `architecture/zero-trust`                   | `all` (principles only)                                     |
 
 Every archetype ships a `_principles.md` file (language-agnostic architectural guidance, references to OWASP ASVS / cheat sheets / CWE) plus one markdown file per supported language. Some archetypes use `applies_to: [all]` to deliver principles-only guidance that applies regardless of language — these return architectural advice without code examples.
 
@@ -586,12 +609,12 @@ You need the .NET 10 SDK. `dotnet --list-sdks` should include a 10.x entry.
 
 ## Roadmap
 
-The corpus has grown from 3 to 37 archetypes across 10 categories. The next steps are about deepening coverage and widening the supported targets.
+The corpus has grown from 3 to 60 archetypes across 10 categories and 11 languages (198 language files). The next steps are about deepening coverage and widening the supported targets.
 
-- **Corpus depth** — fill language gaps (Rust and C coverage is thinner than C#/Python/Go), and add new archetypes as the community identifies topics. VibeGuard's value scales with corpus depth.
-- **More languages** — JavaScript/TypeScript, Java, Kotlin, and Swift are the obvious next targets. Adding a language is a content PR plus (optionally) a one-line config change to extend `VIBEGUARD_SUPPORTED_LANGUAGES`; the server itself has no enum to edit.
+- **Corpus depth** — fill language gaps (Swift has zero coverage; Rust, C, and Kotlin are thinner than C#/Python/Go), and add new archetypes as the community identifies topics. VibeGuard's value scales with corpus depth. A `template/` folder ships with schema documentation and LLM-ready generation prompts for contributors creating new archetypes.
 - **Framework awareness** — the `framework` parameter on `prep` is already accepted on the wire; activating it means adding per-framework sub-files or frontmatter.
 - **Content review tooling** — a lightweight linter for PRs that runs the same validator the server runs at startup, so contributors see errors before pushing.
+
 Tracked in GitHub issues. If you want to help with any of these, open an issue first so we can align on scope.
 
 ## Contributing
