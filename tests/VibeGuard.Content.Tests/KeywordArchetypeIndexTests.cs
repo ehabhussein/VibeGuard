@@ -32,7 +32,7 @@ public class KeywordArchetypeIndexTests
             LanguageFiles: new Dictionary<string, LanguageFile>(StringComparer.Ordinal));
 
     [Fact]
-    public void Search_ByKeyword_ReturnsHit()
+    public async Task Search_ByKeyword_ReturnsHit()
     {
         var hashing = MakeArchetype(
             "auth/password-hashing",
@@ -42,14 +42,15 @@ public class KeywordArchetypeIndexTests
             new[] { "csharp", "python" });
         var index = KeywordArchetypeIndex.Build(new[] { hashing });
 
-        var hits = index.Search("how do I hash a password", "python", maxResults: 8);
+        var ct = TestContext.Current.CancellationToken;
+        var hits = await index.SearchAsync("how do I hash a password", "python", maxResults: 8, ct);
 
         hits.Should().ContainSingle()
             .Which.ArchetypeId.Should().Be("auth/password-hashing");
     }
 
     [Fact]
-    public void Search_LanguageNotInAppliesTo_FiltersOut()
+    public async Task Search_LanguageNotInAppliesTo_FiltersOut()
     {
         var cOnly = MakeArchetype(
             "memory/safe-string-handling",
@@ -59,13 +60,14 @@ public class KeywordArchetypeIndexTests
             new[] { "c" });
         var index = KeywordArchetypeIndex.Build(new[] { cOnly });
 
-        var hits = index.Search("safe string buffer overflow", "python", maxResults: 8);
+        var ct = TestContext.Current.CancellationToken;
+        var hits = await index.SearchAsync("safe string buffer overflow", "python", maxResults: 8, ct);
 
         hits.Should().BeEmpty();
     }
 
     [Fact]
-    public void Search_MaxResults_IsRespected()
+    public async Task Search_MaxResults_IsRespected()
     {
         var archetypes = new List<Archetype>();
         for (var i = 0; i < 12; i++)
@@ -79,7 +81,8 @@ public class KeywordArchetypeIndexTests
         }
         var index = KeywordArchetypeIndex.Build(archetypes);
 
-        var hits = index.Search("password hash", "csharp", maxResults: 5);
+        var ct = TestContext.Current.CancellationToken;
+        var hits = await index.SearchAsync("password hash", "csharp", maxResults: 5, ct);
 
         hits.Should().HaveCount(5);
     }

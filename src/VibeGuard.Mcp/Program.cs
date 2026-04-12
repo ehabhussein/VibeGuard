@@ -4,6 +4,7 @@ using VibeGuard.Content.Loading;
 using VibeGuard.Content.Services;
 using VibeGuard.Content.Validation;
 using VibeGuard.Mcp;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;
@@ -136,10 +137,20 @@ static void RegisterVibeGuardServices(IServiceCollection services, IConfiguratio
             archetypesRoot,
             includeDrafts,
             sp.GetRequiredService<SupportedLanguageSet>()))
+        .AddSingleton<OnnxEmbeddingGenerator>(_ => OnnxEmbeddingGenerator.Create())
+        .AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+            sp.GetRequiredService<OnnxEmbeddingGenerator>())
         .AddSingleton<IArchetypeIndex>(sp =>
         {
             var repo = sp.GetRequiredService<IArchetypeRepository>();
-            return KeywordArchetypeIndex.Build(repo.LoadAll());
+            var archetypes = repo.LoadAll();
+            var generator = sp.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+
+            var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+            var embeddingIndex = EmbeddingArchetypeIndex.BuildAsync(archetypes, generator)
+                .GetAwaiter().GetResult();
+
+            return new HybridSearchService(keywordIndex, embeddingIndex, generator);
         })
         .AddSingleton<IPrepService, PrepService>()
         .AddSingleton<IConsultationService, ConsultationService>();

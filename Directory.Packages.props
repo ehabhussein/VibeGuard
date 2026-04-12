@@ -25,6 +25,11 @@
     <PackageVersion Include="YamlDotNet" Version="17.0.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.201" />
 
+    <!-- VibeGuard.Content — Semantic search -->
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.24.4" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.4.1" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="2.0.0" />
+
     <!-- VibeGuard.Mcp -->
     <PackageVersion Include="ModelContextProtocol" Version="1.2.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.2.0" />

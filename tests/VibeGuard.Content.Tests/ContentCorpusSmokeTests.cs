@@ -54,16 +54,18 @@ public class ContentCorpusSmokeTests
     }
 
     [Fact]
-    public void Prep_FindsPasswordHashingForHashingIntent()
+    public async Task Prep_FindsPasswordHashingForHashingIntent()
     {
+        var ct = TestContext.Current.CancellationToken;
         var root = FindArchetypesRoot();
         var index = KeywordArchetypeIndex.Build(BuildRepo(root).LoadAll());
         var prep = new PrepService(index, DefaultLanguages);
 
-        var result = prep.Prep(
+        var result = await prep.PrepAsync(
             "I'm about to write a function to hash and verify user passwords",
             "python",
-            framework: null);
+            framework: null,
+            ct);
 
         result.Matches.Should().NotBeEmpty();
         result.Matches.Should().Contain(m => m.ArchetypeId == "auth/password-hashing");

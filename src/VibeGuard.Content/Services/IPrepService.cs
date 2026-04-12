@@ -21,5 +21,5 @@ public interface IPrepService
     /// Optional framework hint. Accepted for forward-compatibility but
     /// not used for filtering in MVP per spec §3.1.
     /// </param>
-    PrepResult Prep(string intent, string language, string? framework);
+    Task<PrepResult> PrepAsync(string intent, string language, string? framework, CancellationToken ct = default);
 }

@@ -6,10 +6,17 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Models\all-MiniLM-L6-v2.onnx" LogicalName="VibeGuard.Content.Models.all-MiniLM-L6-v2.onnx" />
+    <EmbeddedResource Include="Models\vocab.txt" LogicalName="VibeGuard.Content.Models.vocab.txt" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="VibeGuard.Content.Tests" />

@@ -54,12 +54,13 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
     public IReadOnlyList<string> GetReverseRelated(string archetypeId)
         => _reverseRelated.TryGetValue(archetypeId, out var list) ? list : ImmutableArray<string>.Empty;
 
-    public IReadOnlyList<PrepMatch> Search(string intent, string language, int maxResults)
+    public Task<IReadOnlyList<PrepMatch>> SearchAsync(
+        string intent, string language, int maxResults, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(language);
-        if (maxResults <= 0) return Array.Empty<PrepMatch>();
+        if (maxResults <= 0) return Task.FromResult<IReadOnlyList<PrepMatch>>([]);
         var tokens = Tokenize(intent);
-        if (tokens.Count == 0) return Array.Empty<PrepMatch>();
+        if (tokens.Count == 0) return Task.FromResult<IReadOnlyList<PrepMatch>>([]);
 
         var scores = new Dictionary<string, double>(StringComparer.Ordinal);
         AccumulateKeywordScores(tokens, scores);
@@ -77,7 +78,8 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
         }
 
         hits.Sort(CompareHits);
-        return hits.Count <= maxResults ? hits : hits.GetRange(0, maxResults);
+        IReadOnlyList<PrepMatch> result = hits.Count <= maxResults ? hits : hits.GetRange(0, maxResults);
+        return Task.FromResult(result);
     }
 
     private static int CompareHits(PrepMatch a, PrepMatch b)

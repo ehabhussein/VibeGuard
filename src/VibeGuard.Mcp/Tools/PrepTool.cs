@@ -23,18 +23,19 @@ internal static class PrepTool
         "Call this before writing a function or class: pass a natural-language " +
         "description of what you are about to build and the target language, " +
         "and receive up to 8 ranked archetype identifiers to consult().")]
-    public static PrepToolResponse Run(
+    public static async Task<PrepToolResponse> RunAsync(
         IPrepService service,
         [Description("Free-text description of what you are about to write. Max 2000 chars.")] string intent,
         [Description(
             "Target language as a lowercase wire name (e.g. 'csharp', 'python', 'c', 'go', 'rust'). " +
             "The exact set is configured on the server; an unsupported value yields an error " +
             "that lists the currently supported languages.")] string language,
-        [Description("Optional framework hint. Accepted for forward compatibility; not used for filtering in MVP.")] string? framework = null)
+        [Description("Optional framework hint. Accepted for forward compatibility; not used for filtering in MVP.")] string? framework = null,
+        CancellationToken ct = default)
     {
         try
         {
-            var result = service.Prep(intent, language, framework);
+            var result = await service.PrepAsync(intent, language, framework, ct).ConfigureAwait(false);
             var matches = new List<PrepToolMatch>(result.Matches.Count);
             foreach (var match in result.Matches)
             {

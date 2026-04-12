@@ -40,70 +40,78 @@ public class PrepServiceTests
             LanguageFiles: new Dictionary<string, LanguageFile>(StringComparer.Ordinal));
 
     [Fact]
-    public void Prep_ValidIntent_ReturnsMatches()
+    public async Task Prep_ValidIntent_ReturnsMatches()
     {
+        var ct = TestContext.Current.CancellationToken;
         var service = BuildService(
             Make("auth/password-hashing", "Password Hashing",
                 new[] { "password", "bcrypt" }, new[] { "csharp", "python" }));
 
-        var result = service.Prep(
+        var result = await service.PrepAsync(
             intent: "I'm writing a function to hash a password",
             language: "python",
-            framework: null);
+            framework: null,
+            ct);
 
         result.Matches.Should().ContainSingle()
               .Which.ArchetypeId.Should().Be("auth/password-hashing");
     }
 
     [Fact]
-    public void Prep_EmptyIntent_Throws()
+    public async Task Prep_EmptyIntent_Throws()
     {
+        var ct = TestContext.Current.CancellationToken;
         var service = BuildService();
-        var act = () => service.Prep("", "csharp", null);
-        act.Should().Throw<ArgumentException>().WithMessage("*non-empty*");
+        var act = () => service.PrepAsync("", "csharp", null, ct);
+        await act.Should().ThrowAsync<ArgumentException>().WithMessage("*non-empty*");
     }
 
     [Fact]
-    public void Prep_OversizedIntent_Throws()
+    public async Task Prep_OversizedIntent_Throws()
     {
+        var ct = TestContext.Current.CancellationToken;
         var service = BuildService();
         var giant = new string('x', PrepService.MaxIntentLength + 1);
-        var act = () => service.Prep(giant, "csharp", null);
-        act.Should().Throw<ArgumentException>()
+        var act = () => service.PrepAsync(giant, "csharp", null, ct);
+        await act.Should().ThrowAsync<ArgumentException>()
            .WithMessage("*characters or fewer*");
     }
 
     [Fact]
-    public void Prep_LanguageFilter_HidesUnsupportedArchetypes()
+    public async Task Prep_LanguageFilter_HidesUnsupportedArchetypes()
     {
+        var ct = TestContext.Current.CancellationToken;
         var service = BuildService(
             Make("memory/safe-string-handling", "Safe Strings",
                 new[] { "string", "buffer", "overflow" }, new[] { "c" }));
 
-        var result = service.Prep(
+        var result = await service.PrepAsync(
             "safe string buffer handling",
             "python", // not in applies_to
-            framework: null);
+            framework: null,
+            ct);
 
         result.Matches.Should().BeEmpty();
     }
 
     [Fact]
-    public void Prep_LanguageNotInSet_ThrowsWithConfiguredListInMessage()
+    public async Task Prep_LanguageNotInSet_ThrowsWithConfiguredListInMessage()
     {
+        var ct = TestContext.Current.CancellationToken;
         var service = BuildService();
 
-        var act = () => service.Prep("hashing and passwords", "klingon", null);
+        var act = () => service.PrepAsync("hashing and passwords", "klingon", null, ct);
 
-        act.Should().Throw<ArgumentException>()
-           .WithMessage("*'klingon'*not supported*")
-           .And.Message.Should().Contain("csharp")
-           .And.Contain("rust");
+        var ex = await act.Should().ThrowAsync<ArgumentException>()
+           .WithMessage("*'klingon'*not supported*");
+        ex.And.Message.Should().Contain("csharp");
+        ex.And.Message.Should().Contain("rust");
     }
 
     [Fact]
-    public void Prep_RestrictedLanguageSet_RejectsOtherwiseValidLanguage()
+    public async Task Prep_RestrictedLanguageSet_RejectsOtherwiseValidLanguage()
     {
+        var ct = TestContext.Current.CancellationToken;
         // Rebuild the service with a set that excludes python entirely.
         var cSharpOnly = new SupportedLanguageSet(["csharp"]);
         var service = new PrepService(
@@ -112,9 +120,9 @@ public class PrepServiceTests
                     new[] { "password" }, new[] { "csharp", "python" })),
             cSharpOnly);
 
-        var act = () => service.Prep("hash a password", "python", null);
+        var act = () => service.PrepAsync("hash a password", "python", null, ct);
 
-        act.Should().Throw<ArgumentException>()
+        await act.Should().ThrowAsync<ArgumentException>()
            .WithMessage("*python*not supported*");
     }
 }

@@ -16,7 +16,7 @@ public sealed class PrepService(IArchetypeIndex index, SupportedLanguageSet lang
     public const int MaxResults = 8;
 
     /// <inheritdoc/>
-    public PrepResult Prep(string intent, string language, string? framework)
+    public async Task<PrepResult> PrepAsync(string intent, string language, string? framework, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(language);
@@ -44,7 +44,7 @@ public sealed class PrepService(IArchetypeIndex index, SupportedLanguageSet lang
         // but is not used for filtering in MVP.
         _ = framework;
 
-        var matches = index.Search(intent, language, MaxResults);
+        var matches = await index.SearchAsync(intent, language, MaxResults, ct).ConfigureAwait(false);
         return new PrepResult(matches);
     }
 }

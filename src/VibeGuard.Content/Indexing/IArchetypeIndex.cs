@@ -16,7 +16,8 @@ public interface IArchetypeIndex
     /// index itself is language-agnostic and simply matches the wire
     /// string against each archetype's <c>applies_to</c>.
     /// </summary>
-    IReadOnlyList<PrepMatch> Search(string intent, string language, int maxResults);
+    Task<IReadOnlyList<PrepMatch>> SearchAsync(
+        string intent, string language, int maxResults, CancellationToken ct = default);
 
     /// <summary>O(1) lookup by archetype ID. Returns <c>null</c> if unknown.</summary>
     Archetype? GetById(string archetypeId);
