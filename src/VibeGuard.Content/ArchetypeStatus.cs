@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace VibeGuard.Content;
 
 /// <summary>
@@ -48,13 +50,28 @@ public static class ArchetypeStatusExtensions
     public const string StableWire = "stable";
     public const string DeprecatedWire = "deprecated";
 
-    public static string ToWireString(this ArchetypeStatus status) => status switch
+    // C# 14 extension members — exposes WireString as a property
+    // rather than a ToWireString() method. Same semantics, modern syntax.
+    //
+    // CA1034: the compiler synthesizes a nested type for the extension
+    // block; this is not a developer-authored nested type and will be
+    // suppressed by the SDK once the analyzers catch up with C# 14.
+#pragma warning disable CA1034
+    extension(ArchetypeStatus status)
     {
-        ArchetypeStatus.Draft => DraftWire,
-        ArchetypeStatus.Stable => StableWire,
-        ArchetypeStatus.Deprecated => DeprecatedWire,
-        _ => throw new ArgumentOutOfRangeException(nameof(status), status, null),
-    };
+        /// <summary>
+        /// The lowercase wire-form token for this status value,
+        /// matching the YAML frontmatter representation.
+        /// </summary>
+        public string WireString => status switch
+        {
+            ArchetypeStatus.Draft => DraftWire,
+            ArchetypeStatus.Stable => StableWire,
+            ArchetypeStatus.Deprecated => DeprecatedWire,
+            _ => throw new UnreachableException(),
+        };
+    }
+#pragma warning restore CA1034
 
     public static bool TryParseWire(string? wire, out ArchetypeStatus status)
     {
