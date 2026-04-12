@@ -15,4 +15,10 @@ internal static partial class StartupLogging
         Level = LogLevel.Critical,
         Message = "VibeGuard failed to load archetype corpus from {Root}")]
     public static partial void CorpusLoadFailed(ILogger logger, string root, Exception ex);
+
+    [LoggerMessage(
+        EventId = 2,
+        Level = LogLevel.Information,
+        Message = "VibeGuard HTTP transport listening on port {Port}")]
+    public static partial void HttpListening(ILogger logger, int port);
 }
