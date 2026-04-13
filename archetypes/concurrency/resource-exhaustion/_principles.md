@@ -3,7 +3,7 @@ schema_version: 1
 archetype: concurrency/resource-exhaustion
 title: Resource Exhaustion Prevention
 summary: Preventing thread pool starvation, connection leaks, and unbounded queues through explicit capacity limits and backpressure.
-applies_to: [csharp, python, go, javascript, typescript, java, kotlin]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

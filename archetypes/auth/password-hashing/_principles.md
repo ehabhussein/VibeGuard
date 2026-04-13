@@ -3,7 +3,7 @@ schema_version: 1
 archetype: auth/password-hashing
 title: Password Hashing
 summary: Storing, verifying, and handling user passwords in any backend.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

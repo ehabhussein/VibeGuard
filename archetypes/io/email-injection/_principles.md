@@ -3,7 +3,7 @@ schema_version: 1
 archetype: io/email-injection
 title: Email Header Injection Defense
 summary: Preventing attackers from injecting SMTP headers through form fields to send unauthorized email or hijack mail flows.
-applies_to: [csharp, python, go, javascript, java, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

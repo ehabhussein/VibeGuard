@@ -3,7 +3,7 @@ schema_version: 1
 archetype: http/csrf
 title: Cross-Site Request Forgery Defense
 summary: Ensuring state-changing requests originate from your own application, not an attacker's page.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

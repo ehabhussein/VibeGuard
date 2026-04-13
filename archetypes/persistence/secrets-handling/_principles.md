@@ -3,7 +3,7 @@ schema_version: 1
 archetype: persistence/secrets-handling
 title: Secrets Handling
 summary: Storing, loading, and using API keys, credentials, and signing keys safely.
-applies_to: [csharp, python]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

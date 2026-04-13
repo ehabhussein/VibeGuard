@@ -3,7 +3,7 @@ schema_version: 1
 archetype: logging/audit-trail
 title: Security Audit Trail
 summary: Structured, tamper-evident audit logs that record who did what, when, and why.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

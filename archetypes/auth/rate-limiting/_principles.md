@@ -3,7 +3,7 @@ schema_version: 1
 archetype: auth/rate-limiting
 title: Rate Limiting and Brute Force Defense
 summary: Throttling authentication attempts and sensitive endpoints to defeat credential stuffing and brute force attacks.
-applies_to: [csharp, python, go, javascript, typescript, java, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

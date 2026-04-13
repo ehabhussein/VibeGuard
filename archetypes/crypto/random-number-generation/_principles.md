@@ -3,7 +3,7 @@ schema_version: 1
 archetype: crypto/random-number-generation
 title: Cryptographic Random Number Generation
 summary: Generating unpredictable random values for tokens, keys, nonces, and any security-sensitive context.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

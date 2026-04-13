@@ -3,7 +3,7 @@ schema_version: 1
 archetype: crypto/tls-configuration
 title: TLS Configuration
 summary: Configuring TLS clients and servers for secure transport with modern protocol versions and cipher suites.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

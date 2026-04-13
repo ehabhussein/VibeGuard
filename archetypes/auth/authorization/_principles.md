@@ -3,7 +3,7 @@ schema_version: 1
 archetype: auth/authorization
 title: Authorization
 summary: Deciding whether an already-authenticated caller is allowed to do a specific thing to a specific resource.
-applies_to: [csharp, python]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

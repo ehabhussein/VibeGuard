@@ -3,7 +3,7 @@ schema_version: 1
 archetype: http/security-headers
 title: HTTP Security Headers
 summary: Configuring browser security policies through HTTP response headers.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

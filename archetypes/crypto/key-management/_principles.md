@@ -3,7 +3,7 @@ schema_version: 1
 archetype: crypto/key-management
 title: Cryptographic Key Management
 summary: Generating, storing, rotating, and destroying cryptographic keys throughout their lifecycle.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

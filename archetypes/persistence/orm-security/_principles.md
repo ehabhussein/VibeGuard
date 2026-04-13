@@ -3,7 +3,7 @@ schema_version: 1
 archetype: persistence/orm-security
 title: ORM Security
 summary: Preventing mass assignment, query injection, and data leaks through ORM misuse.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

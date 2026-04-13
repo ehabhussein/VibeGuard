@@ -103,13 +103,27 @@ public class ContentCorpusSmokeTests
     }
 
     [Fact]
-    public void Consult_PasswordHashingInC_Redirects()
+    public void Consult_PasswordHashingInC_ReturnsPrinciplesOnly()
     {
         var root = FindArchetypesRoot();
         var index = KeywordArchetypeIndex.Build(BuildRepo(root).LoadAll());
         var consult = new ConsultationService(index, DefaultLanguages);
 
         var result = consult.Consult("auth/password-hashing", "c");
+
+        result.NotFound.Should().BeFalse();
+        result.Redirect.Should().BeFalse();
+        result.Content.Should().Contain("Password Hashing — Principles");
+    }
+
+    [Fact]
+    public void Consult_UseAfterFreeInPython_Redirects()
+    {
+        var root = FindArchetypesRoot();
+        var index = KeywordArchetypeIndex.Build(BuildRepo(root).LoadAll());
+        var consult = new ConsultationService(index, DefaultLanguages);
+
+        var result = consult.Consult("memory/use-after-free", "python");
 
         result.Redirect.Should().BeTrue();
         result.NotFound.Should().BeFalse();

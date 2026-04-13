@@ -3,7 +3,7 @@ schema_version: 1
 archetype: crypto/asymmetric-encryption
 title: Asymmetric Encryption and Signing
 summary: Generating RSA/ECC key pairs, encrypting with public keys, and signing or verifying data with private keys.
-applies_to: [csharp, python, go, javascript, typescript, java, kotlin, rust]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

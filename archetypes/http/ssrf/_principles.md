@@ -3,7 +3,7 @@ schema_version: 1
 archetype: http/ssrf
 title: Server-Side Request Forgery Defense
 summary: Stopping user-supplied URLs from turning your server into an attacker-controlled HTTP client.
-applies_to: [csharp, python]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

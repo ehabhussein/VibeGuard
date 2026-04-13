@@ -3,7 +3,7 @@ schema_version: 1
 archetype: io/xml-injection
 title: XML Injection Defense
 summary: Preventing XXE, XPath injection, and DTD-based attacks when parsing or querying XML from untrusted sources.
-applies_to: [csharp, python, go, java, kotlin, php, ruby]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

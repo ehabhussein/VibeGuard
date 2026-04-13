@@ -3,7 +3,7 @@ schema_version: 1
 archetype: http/request-smuggling
 title: HTTP Request Smuggling
 summary: Preventing HTTP desync attacks by ensuring consistent request boundary parsing across proxy-server chains.
-applies_to: [csharp, python, go, java, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

@@ -3,7 +3,7 @@ schema_version: 1
 archetype: crypto/hashing-integrity
 title: Hashing and Data Integrity
 summary: Using HMAC and cryptographic digests to verify data integrity, authenticate messages, and produce checksums — not for password storage.
-applies_to: [csharp, python, go, javascript, typescript, java, kotlin, rust, c]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

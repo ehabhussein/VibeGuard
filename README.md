@@ -559,7 +559,7 @@ Adding a language to a VibeGuard deployment is therefore a content decision, not
 |----------------------------|----------|----------------------------------------------------------------------------------------------------|
 | `VIBEGUARD_TRANSPORT`      | *(unset, defaults to `stdio`)* | Set to `http` to start the Streamable HTTP server instead of stdio. |
 | `VIBEGUARD_HTTP_PORT`      | *(unset, defaults to `3001`)* | Port for the HTTP transport. Ignored in stdio mode. |
-| `VIBEGUARD_INCLUDE_DRAFTS` | *(unset)* | Drafts are parsed and validated but hidden from the active corpus. Set to any non-empty value to include drafts in `prep` results and make them resolvable via `consult`. Intended for local content development, not production. |
+| `VIBEGUARD_INCLUDE_DRAFTS` | *(unset)* | Override the `IncludeDrafts` setting. Set to any non-empty value to include draft archetypes; leave unset to use the `appsettings.json` value (default: `true`). |
 | `VIBEGUARD_SUPPORTED_LANGUAGES` | *(unset)* | Comma-separated list of lowercase wire names that overrides the default supported-language set. See [Supported languages](#supported-languages). |
 
 Example `appsettings.json`:
@@ -570,6 +570,7 @@ Example `appsettings.json`:
     "ArchetypesRoot": "/opt/vibeguard/archetypes",
     "Transport": "stdio",
     "HttpPort": 3001,
+    "IncludeDrafts": true,
     "SupportedLanguages": ["csharp", "python", "rust"]
   }
 }

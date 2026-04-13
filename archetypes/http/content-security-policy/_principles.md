@@ -3,7 +3,7 @@ schema_version: 1
 archetype: http/content-security-policy
 title: Content Security Policy
 summary: Deploying strict CSP headers with nonces and hashes to eliminate XSS execution paths.
-applies_to: [csharp, python, go, javascript, typescript, java, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

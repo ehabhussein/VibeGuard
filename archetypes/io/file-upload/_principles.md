@@ -3,7 +3,7 @@ schema_version: 1
 archetype: io/file-upload
 title: Secure File Upload Handling
 summary: Safely receiving, validating, and storing files uploaded by untrusted callers.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

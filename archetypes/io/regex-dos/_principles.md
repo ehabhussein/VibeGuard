@@ -3,7 +3,7 @@ schema_version: 1
 archetype: io/regex-dos
 title: ReDoS Defense
 summary: Preventing catastrophic backtracking in regular expressions from causing denial-of-service on attacker-controlled input.
-applies_to: [csharp, python, go, javascript, typescript, java, kotlin, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

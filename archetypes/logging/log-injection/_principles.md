@@ -3,7 +3,7 @@ schema_version: 1
 archetype: logging/log-injection
 title: Log Injection Defense
 summary: Preventing log forging and CRLF injection by sanitizing newlines and control characters from all externally-sourced values before they enter log entries.
-applies_to: [csharp, python, go, javascript, typescript, java, kotlin, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

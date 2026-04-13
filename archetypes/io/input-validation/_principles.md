@@ -3,7 +3,7 @@ schema_version: 1
 archetype: io/input-validation
 title: Input Validation
 summary: Validating untrusted input at every trust boundary.
-applies_to: [csharp, python, c, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

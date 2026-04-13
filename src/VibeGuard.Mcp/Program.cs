@@ -127,7 +127,8 @@ static void RegisterVibeGuardServices(IServiceCollection services, IConfiguratio
         : Path.GetFullPath(configured, AppContext.BaseDirectory);
 
     var includeDrafts = !string.IsNullOrEmpty(
-        Environment.GetEnvironmentVariable("VIBEGUARD_INCLUDE_DRAFTS"));
+        Environment.GetEnvironmentVariable("VIBEGUARD_INCLUDE_DRAFTS"))
+        || configuration.GetValue<bool>("VibeGuard:IncludeDrafts");
 
     var supportedLanguages = ResolveSupportedLanguages(configuration);
 

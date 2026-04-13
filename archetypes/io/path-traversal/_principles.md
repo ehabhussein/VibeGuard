@@ -3,7 +3,7 @@ schema_version: 1
 archetype: io/path-traversal
 title: Path Traversal Defense
 summary: Keeping user-supplied paths and filenames from escaping the directory you intended.
-applies_to: [csharp, python]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

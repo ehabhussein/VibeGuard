@@ -3,7 +3,7 @@ schema_version: 1
 archetype: persistence/nosql-injection
 title: NoSQL Injection Defense
 summary: Preventing query operator abuse and data exfiltration in MongoDB, Redis, and document stores through structural query construction.
-applies_to: [csharp, python, go, javascript, typescript, java, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

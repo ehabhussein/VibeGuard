@@ -3,7 +3,7 @@ schema_version: 1
 archetype: persistence/sql-injection
 title: SQL Injection Defense
 summary: Keeping user input out of SQL statements by construction.
-applies_to: [csharp, python, rust]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

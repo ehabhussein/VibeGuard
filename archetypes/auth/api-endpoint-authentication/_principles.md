@@ -3,7 +3,7 @@ schema_version: 1
 archetype: auth/api-endpoint-authentication
 title: API Endpoint Authentication
 summary: Requiring and verifying caller identity on every HTTP endpoint that isn't explicitly public.
-applies_to: [csharp, python]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

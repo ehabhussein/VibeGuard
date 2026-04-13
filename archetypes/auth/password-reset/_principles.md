@@ -3,7 +3,7 @@ schema_version: 1
 archetype: auth/password-reset
 title: Secure Password Reset
 summary: Issuing, validating, and expiring password reset tokens without leaking account existence or allowing token reuse.
-applies_to: [csharp, python, go, javascript, typescript, java, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

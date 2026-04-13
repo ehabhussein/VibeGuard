@@ -3,7 +3,7 @@ schema_version: 1
 archetype: persistence/database-connections
 title: Database Connection Security
 summary: Securing database connections through TLS enforcement, connection pool limits, and automated credential rotation.
-applies_to: [csharp, python, go, javascript, typescript, java, kotlin, ruby, php]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

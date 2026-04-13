@@ -3,7 +3,7 @@ schema_version: 1
 archetype: auth/session-tokens
 title: Session Token Management
 summary: Generating, storing, rotating, and invalidating session tokens for authenticated users.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

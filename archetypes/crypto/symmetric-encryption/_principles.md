@@ -3,7 +3,7 @@ schema_version: 1
 archetype: crypto/symmetric-encryption
 title: Symmetric Encryption
 summary: Encrypting data at rest (and in transit, when TLS isn't enough) with authenticated symmetric ciphers.
-applies_to: [csharp, python]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]
