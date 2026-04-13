@@ -26,16 +26,19 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     private readonly FrozenDictionary<string, Archetype> _byId;
-    private readonly FrozenDictionary<string, FrozenSet<string>> _keywordIndex;
+    private readonly FrozenDictionary<string, FrozenDictionary<string, double>> _keywordIndex;
+    private readonly FrozenDictionary<string, double> _idfWeights;
     private readonly FrozenDictionary<string, ImmutableArray<string>> _reverseRelated;
 
     private KeywordArchetypeIndex(
         FrozenDictionary<string, Archetype> byId,
-        FrozenDictionary<string, FrozenSet<string>> keywordIndex,
+        FrozenDictionary<string, FrozenDictionary<string, double>> keywordIndex,
+        FrozenDictionary<string, double> idfWeights,
         FrozenDictionary<string, ImmutableArray<string>> reverseRelated)
     {
         _byId = byId;
         _keywordIndex = keywordIndex;
+        _idfWeights = idfWeights;
         _reverseRelated = reverseRelated;
     }
 
@@ -43,9 +46,9 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
     {
         ArgumentNullException.ThrowIfNull(archetypes);
         var byId = BuildByIdIndex(archetypes);
-        var keywordIndex = BuildKeywordIndex(archetypes);
+        var (keywordIndex, idfWeights) = BuildKeywordIndex(archetypes);
         var reverseRelated = BuildReverseRelatedIndex(archetypes);
-        return new KeywordArchetypeIndex(byId, keywordIndex, reverseRelated);
+        return new KeywordArchetypeIndex(byId, keywordIndex, idfWeights, reverseRelated);
     }
 
     public Archetype? GetById(string archetypeId)
@@ -66,7 +69,7 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
         AccumulateKeywordScores(tokens, scores);
         AccumulateTitleSummaryBonus(tokens, scores);
 
-        var divisor = tokens.Count * 1.5;
+        var divisor = 2.0 * Math.Log(_byId.Count + 1);
         var hits = new List<PrepMatch>(scores.Count);
         foreach (var (id, raw) in scores)
         {
@@ -107,28 +110,66 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
         return map.ToFrozenDictionary(StringComparer.Ordinal);
     }
 
-    private static FrozenDictionary<string, FrozenSet<string>> BuildKeywordIndex(IReadOnlyList<Archetype> archetypes)
+    private static (
+        FrozenDictionary<string, FrozenDictionary<string, double>> Index,
+        FrozenDictionary<string, double> Idf
+    ) BuildKeywordIndex(IReadOnlyList<Archetype> archetypes)
     {
-        var accumulator = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        // term → {archetypeId: matchWeight}; keep highest weight per (term, archetype) pair.
+        var accumulator = new Dictionary<string, Dictionary<string, double>>(StringComparer.OrdinalIgnoreCase);
+
+        void Record(string term, string archetypeId, double weight)
+        {
+            if (!accumulator.TryGetValue(term, out var bucket))
+            {
+                bucket = new Dictionary<string, double>(StringComparer.Ordinal);
+                accumulator[term] = bucket;
+            }
+            bucket.TryGetValue(archetypeId, out var existing);
+            if (weight > existing) bucket[archetypeId] = weight;
+        }
+
         foreach (var archetype in archetypes)
         {
             foreach (var keyword in archetype.Principles.Keywords)
             {
                 if (string.IsNullOrWhiteSpace(keyword)) continue;
-                if (!accumulator.TryGetValue(keyword, out var bucket))
+
+                // Exact keyword at full weight.
+                Record(keyword, archetype.Id, 1.0);
+
+                // Compound decomposition for hyphenated keywords.
+                if (keyword.Contains('-'))
                 {
-                    bucket = new HashSet<string>(StringComparer.Ordinal);
-                    accumulator[keyword] = bucket;
+                    foreach (var part in keyword.Split('-'))
+                    {
+                        if (part.Length >= 3 && !Stopwords.Contains(part))
+                            Record(part, archetype.Id, 0.5);
+                    }
                 }
-                bucket.Add(archetype.Id);
             }
         }
-        var frozen = new Dictionary<string, FrozenSet<string>>(accumulator.Count, StringComparer.OrdinalIgnoreCase);
-        foreach (var (keyword, bucket) in accumulator)
+
+        // Freeze the inner dictionaries.
+        var frozen = new Dictionary<string, FrozenDictionary<string, double>>(
+            accumulator.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var (term, bucket) in accumulator)
         {
-            frozen[keyword] = bucket.ToFrozenSet(StringComparer.Ordinal);
+            frozen[term] = bucket.ToFrozenDictionary(StringComparer.Ordinal);
         }
-        return frozen.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+        var index = frozen.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
+        // IDF: log((N + 1) / (df + 1)) + 1  where df = distinct archetypes a term maps to.
+        var n = archetypes.Count;
+        var idf = new Dictionary<string, double>(accumulator.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var (term, bucket) in accumulator)
+        {
+            var df = bucket.Count;
+            idf[term] = Math.Log((n + 1.0) / (df + 1.0)) + 1.0;
+        }
+        var idfFrozen = idf.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
+        return (index, idfFrozen);
     }
 
     private static FrozenDictionary<string, ImmutableArray<string>> BuildReverseRelatedIndex(
@@ -160,11 +201,12 @@ public sealed class KeywordArchetypeIndex : IArchetypeIndex
     {
         foreach (var token in tokens)
         {
-            if (!_keywordIndex.TryGetValue(token, out var ids)) continue;
-            foreach (var id in ids)
+            if (!_keywordIndex.TryGetValue(token, out var archetypeWeights)) continue;
+            var idf = _idfWeights[token];
+            foreach (var (id, matchWeight) in archetypeWeights)
             {
                 scores.TryGetValue(id, out var current);
-                scores[id] = current + 1.0;
+                scores[id] = current + (matchWeight * idf);
             }
         }
     }

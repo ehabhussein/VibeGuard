@@ -5,7 +5,7 @@ namespace VibeGuard.Content.Services;
 /// <summary>
 /// Answers <c>prep</c> queries. Thin wrapper over
 /// <see cref="IArchetypeIndex"/> that owns input validation and
-/// caps result count per spec §3.1 (max 8 matches).
+/// caps result count per spec §3.1 (max 15 matches).
 /// </summary>
 public sealed class PrepService(IArchetypeIndex index, SupportedLanguageSet languages) : IPrepService
 {
@@ -13,7 +13,7 @@ public sealed class PrepService(IArchetypeIndex index, SupportedLanguageSet lang
     public const int MaxIntentLength = 2000;
 
     /// <summary>Maximum number of archetype matches returned per query.</summary>
-    public const int MaxResults = 8;
+    public const int MaxResults = 15;
 
     /// <inheritdoc/>
     public async Task<PrepResult> PrepAsync(string intent, string language, string? framework, CancellationToken ct = default)

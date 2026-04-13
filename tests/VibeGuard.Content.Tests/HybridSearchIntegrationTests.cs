@@ -38,7 +38,7 @@ public class HybridSearchIntegrationTests
         var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
         var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
 
-        var results = await hybrid.SearchAsync("how do I hash a user password securely", "csharp", maxResults: 8, ct);
+        var results = await hybrid.SearchAsync("how do I hash a user password securely", "csharp", maxResults: 15, ct);
 
         results.Should().NotBeEmpty();
         results.Select(r => r.ArchetypeId).Should().Contain("auth/password-hashing");
@@ -57,7 +57,7 @@ public class HybridSearchIntegrationTests
         var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
         var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
 
-        var results = await hybrid.SearchAsync("prevent SQL attacks in my web app", "csharp", maxResults: 8, ct);
+        var results = await hybrid.SearchAsync("prevent SQL attacks in my web app", "csharp", maxResults: 15, ct);
 
         results.Should().NotBeEmpty();
         results.Select(r => r.ArchetypeId).Should().Contain("persistence/sql-injection");
@@ -78,8 +78,34 @@ public class HybridSearchIntegrationTests
 
         // "make my code safer" has no exact keyword matches but should
         // still surface results via semantic similarity.
-        var results = await hybrid.SearchAsync("make my code safer", "csharp", maxResults: 8, ct);
+        var results = await hybrid.SearchAsync("make my code safer", "csharp", maxResults: 15, ct);
 
         results.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task SemanticSearch_BroadAuthQuery_SurfacesMfaJwtOauth()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = FindArchetypesRoot();
+        var repo = new FileSystemArchetypeRepository(root, false, SupportedLanguageSet.Default());
+        var archetypes = repo.LoadAll();
+
+        using var generator = OnnxEmbeddingGenerator.Create();
+        var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+        var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
+        var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
+
+        var results = await hybrid.SearchAsync(
+            "Build a secure authentication system including user registration, login, " +
+            "password hashing, session management, MFA, JWT tokens, and OAuth integration",
+            "csharp", maxResults: 15, ct);
+
+        var ids = results.Select(r => r.ArchetypeId).ToList();
+        ids.Should().Contain("auth/mfa");
+        ids.Should().Contain("auth/jwt-handling");
+        ids.Should().Contain("auth/oauth-integration");
+        ids.Should().Contain("auth/password-hashing");
+        ids.Should().Contain("auth/session-tokens");
     }
 }

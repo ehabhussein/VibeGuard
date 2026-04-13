@@ -121,4 +121,82 @@ public class KeywordArchetypeIndexTests
         var index = KeywordArchetypeIndex.Build(Array.Empty<Archetype>());
         index.GetById("nope/nope").Should().BeNull();
     }
+
+    [Fact]
+    public async Task Search_CompoundKeywordSubParts_MatchViaParts()
+    {
+        var mfa = MakeArchetype(
+            "auth/mfa",
+            "Multi-Factor Authentication",
+            "Implementing TOTP, WebAuthn, and backup codes.",
+            new[] { "mfa", "totp", "backup-codes" },
+            new[] { "all" });
+        var index = KeywordArchetypeIndex.Build(new[] { mfa });
+
+        var ct = TestContext.Current.CancellationToken;
+        var hits = await index.SearchAsync("implement backup codes", "csharp", maxResults: 8, ct);
+
+        hits.Should().ContainSingle()
+            .Which.ArchetypeId.Should().Be("auth/mfa");
+    }
+
+    [Fact]
+    public async Task Search_ExactCompoundKeyword_ScoresHigherThanSubPart()
+    {
+        var mfa = MakeArchetype(
+            "auth/mfa",
+            "Multi-Factor Authentication",
+            "MFA summary.",
+            new[] { "backup-codes" },
+            new[] { "all" });
+        var index = KeywordArchetypeIndex.Build(new[] { mfa });
+
+        var ct = TestContext.Current.CancellationToken;
+        var exactHits = await index.SearchAsync("backup-codes", "csharp", maxResults: 8, ct);
+        var subPartHits = await index.SearchAsync("backup", "csharp", maxResults: 8, ct);
+
+        exactHits.Should().ContainSingle();
+        subPartHits.Should().ContainSingle();
+        exactHits[0].Score.Should().BeGreaterThan(subPartHits[0].Score);
+    }
+
+    [Fact]
+    public async Task Search_UniqueKeyword_ScoresHigherThanCommonKeyword()
+    {
+        var oauth = MakeArchetype(
+            "auth/oauth", "OAuth", "OAuth integration.",
+            new[] { "oauth", "token" }, new[] { "all" });
+        var session = MakeArchetype(
+            "auth/session", "Session", "Session management.",
+            new[] { "session", "token" }, new[] { "all" });
+        var jwt = MakeArchetype(
+            "auth/jwt", "JWT", "JWT handling.",
+            new[] { "jwt", "token" }, new[] { "all" });
+        var index = KeywordArchetypeIndex.Build(new[] { oauth, session, jwt });
+
+        var ct = TestContext.Current.CancellationToken;
+        var oauthHits = await index.SearchAsync("oauth", "csharp", maxResults: 8, ct);
+        var tokenHits = await index.SearchAsync("token", "csharp", maxResults: 8, ct);
+
+        oauthHits[0].Score.Should().BeGreaterThan(tokenHits[0].Score);
+    }
+
+    [Fact]
+    public async Task Search_LongIntent_SameScoreAsShortIntent()
+    {
+        var oauth = MakeArchetype(
+            "auth/oauth", "OAuth", "OAuth integration.",
+            new[] { "oauth" }, new[] { "all" });
+        var index = KeywordArchetypeIndex.Build(new[] { oauth });
+
+        var ct = TestContext.Current.CancellationToken;
+        var shortHits = await index.SearchAsync("implement oauth", "csharp", maxResults: 8, ct);
+        var longHits = await index.SearchAsync(
+            "implement oauth along with password hashing session management rate limiting logging and error handling",
+            "csharp", maxResults: 8, ct);
+
+        shortHits.Should().ContainSingle();
+        longHits.Should().ContainSingle();
+        longHits[0].Score.Should().BeApproximately(shortHits[0].Score, 0.01);
+    }
 }

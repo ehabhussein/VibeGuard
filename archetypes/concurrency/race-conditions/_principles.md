@@ -3,7 +3,7 @@ schema_version: 1
 archetype: concurrency/race-conditions
 title: Race Condition Defense
 summary: Preventing TOCTOU, double-spend, and check-then-act bugs through proper synchronization.
-applies_to: [csharp, python, go]
+applies_to: [all]
 status: stable
 author: ehabhussein
 reviewed_by: [ehabhussein]

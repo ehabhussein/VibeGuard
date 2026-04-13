@@ -64,7 +64,7 @@ public class OnnxEmbeddingGeneratorTests
         ], cancellationToken: ct);
 
         var similarity = CosineSimilarity(results[0].Vector.Span, results[1].Vector.Span);
-        similarity.Should().BeLessThan(0.5);
+        similarity.Should().BeLessThan(0.6);
     }
 
     [Fact]

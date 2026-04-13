@@ -22,7 +22,7 @@ internal static class PrepTool
         "Discover which VibeGuard archetypes are relevant to an upcoming task. " +
         "Call this before writing a function or class: pass a natural-language " +
         "description of what you are about to build and the target language, " +
-        "and receive up to 8 ranked archetype identifiers to consult().")]
+        "and receive up to 15 ranked archetype identifiers to consult().")]
     public static async Task<PrepToolResponse> RunAsync(
         IPrepService service,
         [Description("Free-text description of what you are about to write. Max 2000 chars.")] string intent,

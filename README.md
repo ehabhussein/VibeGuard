@@ -11,7 +11,7 @@ Website: [guardvibe.codes](https://guardvibe.codes)
 
 VibeGuard is an open-source [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that gives any LLM a high-to-low-level engineering consultant it can call **before** writing a function or class. It ships human-authored guidance — principles, architectural placement, anti-patterns, library choices, and language-specific gotchas — organized into focused **archetypes** that the LLM retrieves through two deterministic tools: `prep` and `consult`.
 
-The intelligence lives in the content, not the server. Everything VibeGuard knows is written by humans, reviewed through pull requests, and validated at load time. The server bundles a small ONNX embedding model (all-MiniLM-L6-v2, ~87 MB) for semantic search but performs no generative inference — the model only produces vector similarity scores to rank archetypes against intent.
+The intelligence lives in the content, not the server. Everything VibeGuard knows is written by humans, reviewed through pull requests, and validated at load time. The server bundles a small ONNX embedding model (bge-small-en-v1.5, ~133 MB) for semantic search but performs no generative inference — the model only produces vector similarity scores to rank archetypes against intent.
 
 > **You don't call `prep` or `consult` yourself.** VibeGuard ships an instruction prompt to every MCP-aware client during the protocol handshake. Compliant clients (Claude Desktop, Claude Code, Cursor, VS Code) surface that prompt to the LLM as a system message telling the model to reach for VibeGuard on its own — before writing any security- or architecture-sensitive code. Once VibeGuard is installed in your MCP client, **just code normally**. The LLM consults it automatically. The `prep` / `consult` sections below are an API reference for the LLM (and for MCP client developers), not a set of commands you need to type.
 
@@ -61,14 +61,14 @@ VibeGuard is **not**:
 - **Lifecycle** is explicit in every archetype's frontmatter: `draft`, `stable`, or `deprecated`. Drafts are validated on every build but hidden from the active corpus by default, so half-finished guidance never reaches an LLM. Stable content is the default delivery target. Deprecated archetypes still serve their content but prepend a `> **DEPRECATED**` banner that names the successor, so clients can steer users toward the replacement without hard-failing older sessions.
 - **Indexing** happens once at startup. The full corpus is loaded, validated strictly (YAML frontmatter schema, body-length budgets, reference-implementation size caps, orphan-reference detection, lifecycle field requirements), and frozen into an immutable in-memory index. If anything fails validation the server refuses to start and writes a diagnostic to stderr.
 - **Server instructions** are sent to the LLM during the MCP handshake. Any MCP-aware client surfaces them as a system-prompt fragment that tells the model *when* to call `prep` — before writing any security-sensitive or architecturally-interesting function — so it reaches for VibeGuard on its own instead of waiting to be told.
-- **`prep`** scores archetypes against the LLM's natural-language intent using hybrid search — keyword matching (30% weight) blended with semantic similarity via a local ONNX embedding model (70% weight) — and returns up to 8 candidates, highest-scoring first. Scores are in the 0–1 range. No network calls; all inference runs locally.
+- **`prep`** scores archetypes against the LLM's natural-language intent using hybrid search — keyword matching (30% weight) blended with semantic similarity via a local ONNX embedding model (70% weight) — and returns up to 15 candidates, highest-scoring first. Scores are in the 0–1 range. No network calls; all inference runs locally.
 - **`consult`** composes the principles file with the language file into one markdown payload. Language-agnostic archetypes (`applies_to: [all]`) return principles only — architectural guidance without code examples. If a language-specific archetype doesn't cover the requested language, it returns a redirect with a suggested alternative when one exists.
 
 ## The two tools
 
 ### `prep(intent, language, framework?)`
 
-The LLM calls this **before** writing any non-trivial code, passing a free-text description of what it is about to build and the target language. VibeGuard returns up to eight ranked archetypes to consider consulting. End users do not invoke `prep` directly — the MCP server instructions tell the model when to reach for it.
+The LLM calls this **before** writing any non-trivial code, passing a free-text description of what it is about to build and the target language. VibeGuard returns up to fifteen ranked archetypes to consider consulting. End users do not invoke `prep` directly — the MCP server instructions tell the model when to reach for it.
 
 | Parameter   | Type     | Required | Description                                                    |
 |-------------|----------|----------|----------------------------------------------------------------|
@@ -490,7 +490,7 @@ VibeGuard is three .NET projects:
 src/
   VibeGuard.Content/     Domain types, YAML loader, strict validator, keyword
                          and embedding indexes, hybrid search, prep + consult
-                         services. Pure library. Bundles all-MiniLM-L6-v2 ONNX
+                         services. Pure library. Bundles bge-small-en-v1.5 ONNX
                          model as an embedded resource for local inference.
   VibeGuard.Mcp/         Composition root (Generic Host / WebApplication +
                          Serilog), MCP tool handlers (`prep`, `consult`),
@@ -504,7 +504,7 @@ tests/
 
 Design notes:
 
-- **Immutable at runtime.** Both the keyword index and the embedding index are immutable `FrozenDictionary` instances built once at startup. The ONNX embedding model (all-MiniLM-L6-v2, 384-dim) runs locally with no network calls. Hybrid scoring blends keyword hits (30%) with cosine similarity (70%) to surface archetypes even when the intent phrasing doesn't contain exact keywords.
+- **Immutable at runtime.** Both the keyword index and the embedding index are immutable `FrozenDictionary` instances built once at startup. The ONNX embedding model (bge-small-en-v1.5, 384-dim) runs locally with no network calls. Hybrid scoring blends keyword hits (30%) with cosine similarity (70%) to surface archetypes even when the intent phrasing doesn't contain exact keywords.
 - **Strict content validation.** YamlDotNet runs with no `IgnoreUnmatchedProperties`. Unknown frontmatter keys, missing required fields, body overflows, and orphan `related_archetypes` references all fail the load. If startup validation passes, the corpus is known-good.
 - **File-bound DTOs.** YAML deserialization targets use C# `file`-scoped types so mutability required by the deserializer never leaks onto the public domain surface — the public records are immutable with `IReadOnlyList` / `IReadOnlyDictionary` collections.
 - **Central Package Management.** Every NuGet version lives in `Directory.Packages.props`. csproj files reference packages by ID only.

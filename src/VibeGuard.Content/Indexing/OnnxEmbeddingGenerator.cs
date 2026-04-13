@@ -5,7 +5,7 @@ using Microsoft.ML.Tokenizers;
 namespace VibeGuard.Content.Indexing;
 
 /// <summary>
-/// Local ONNX-based embedding generator using all-MiniLM-L6-v2.
+/// Local ONNX-based embedding generator using bge-small-en-v1.5.
 /// Produces L2-normalized 384-dimensional vectors. The ONNX model
 /// and BERT vocabulary are loaded from assembly embedded resources.
 /// All inference is CPU-bound — <see cref="GenerateAsync"/> completes
@@ -13,8 +13,8 @@ namespace VibeGuard.Content.Indexing;
 /// </summary>
 public sealed class OnnxEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<float>>, IDisposable
 {
-    private const string ModelResourceName = "VibeGuard.Content.Models.all-MiniLM-L6-v2.onnx";
-    private const string VocabResourceName = "VibeGuard.Content.Models.vocab.txt";
+    private const string ModelResourceName = "VibeGuard.Content.Models.bge-small-en-v1.5.onnx";
+    private const string VocabResourceName = "VibeGuard.Content.Models.bge-vocab.txt";
     private const int EmbeddingDimension = 384;
     private const int MaxSequenceLength = 256;
 
@@ -97,26 +97,16 @@ public sealed class OnnxEmbeddingGenerator : IEmbeddingGenerator<string, Embeddi
         // The model outputs token-level embeddings of shape [1, seq_len, 384].
         // Mean-pool across the sequence dimension, then L2-normalize.
         var outputTensor = results[0].AsTensor<float>();
-        var pooled = MeanPool(outputTensor, seqLen);
+        var pooled = ClsPool(outputTensor);
         L2Normalize(pooled);
         return pooled;
     }
 
-    private static float[] MeanPool(Microsoft.ML.OnnxRuntime.Tensors.Tensor<float> tensor, int seqLen)
+    private static float[] ClsPool(Microsoft.ML.OnnxRuntime.Tensors.Tensor<float> tensor)
     {
         var result = new float[EmbeddingDimension];
-        for (var t = 0; t < seqLen; t++)
-        {
-            for (var d = 0; d < EmbeddingDimension; d++)
-            {
-                result[d] += tensor[0, t, d];
-            }
-        }
-        var divisor = (float)seqLen;
         for (var d = 0; d < EmbeddingDimension; d++)
-        {
-            result[d] /= divisor;
-        }
+            result[d] = tensor[0, 0, d];
         return result;
     }
 

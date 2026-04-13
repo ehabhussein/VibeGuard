@@ -15,8 +15,8 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Models\all-MiniLM-L6-v2.onnx" LogicalName="VibeGuard.Content.Models.all-MiniLM-L6-v2.onnx" />
-    <EmbeddedResource Include="Models\vocab.txt" LogicalName="VibeGuard.Content.Models.vocab.txt" />
+    <EmbeddedResource Include="Models\bge-small-en-v1.5.onnx" LogicalName="VibeGuard.Content.Models.bge-small-en-v1.5.onnx" />
+    <EmbeddedResource Include="Models\bge-vocab.txt" LogicalName="VibeGuard.Content.Models.bge-vocab.txt" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="VibeGuard.Content.Tests" />

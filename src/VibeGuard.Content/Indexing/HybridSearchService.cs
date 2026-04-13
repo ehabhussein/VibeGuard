@@ -12,6 +12,7 @@ public sealed class HybridSearchService : IArchetypeIndex
 {
     private const double KeywordWeight = 0.3;
     private const double SemanticWeight = 0.7;
+    private const string QueryPrefix = "Represent this sentence for searching relevant passages: ";
 
     private readonly KeywordArchetypeIndex _keywordIndex;
     private readonly EmbeddingArchetypeIndex _embeddingIndex;
@@ -37,7 +38,7 @@ public sealed class HybridSearchService : IArchetypeIndex
         var keywordHits = await _keywordIndex.SearchAsync(intent, language, maxResults: int.MaxValue, ct).ConfigureAwait(false);
 
         // 2. Semantic search — embed the query, scan all archetypes.
-        var embeddingResult = await _generator.GenerateAsync([intent], cancellationToken: ct).ConfigureAwait(false);
+        var embeddingResult = await _generator.GenerateAsync([QueryPrefix + intent], cancellationToken: ct).ConfigureAwait(false);
         var queryVec = embeddingResult[0].Vector;
         var semanticHits = _embeddingIndex.Search(queryVec.Span, maxResults: int.MaxValue);
 
