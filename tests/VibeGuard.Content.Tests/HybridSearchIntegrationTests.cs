@@ -152,4 +152,109 @@ public class HybridSearchIntegrationTests
         ids.Should().Contain("engineering/refactoring-discipline");
         ids.Should().Contain("engineering/module-decomposition");
     }
+
+    [Fact]
+    public async Task SemanticSearch_ErrorHandlingQuery_SurfacesErrorHandlingArchetype()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = FindArchetypesRoot();
+        var repo = new FileSystemArchetypeRepository(root, false, SupportedLanguageSet.Default());
+        var archetypes = repo.LoadAll();
+
+        using var generator = OnnxEmbeddingGenerator.Create();
+        var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+        var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
+        var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
+
+        var results = await hybrid.SearchAsync(
+            "how should I handle exceptions and propagate failures across service boundaries",
+            "csharp", maxResults: 15, ct);
+
+        var ids = results.Select(r => r.ArchetypeId).ToList();
+        ids.Should().Contain("engineering/error-handling");
+    }
+
+    [Fact]
+    public async Task SemanticSearch_ConfigQuery_SurfacesConfigurationManagement()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = FindArchetypesRoot();
+        var repo = new FileSystemArchetypeRepository(root, false, SupportedLanguageSet.Default());
+        var archetypes = repo.LoadAll();
+
+        using var generator = OnnxEmbeddingGenerator.Create();
+        var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+        var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
+        var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
+
+        var results = await hybrid.SearchAsync(
+            "loading environment variables and separating secrets from settings at service startup",
+            "csharp", maxResults: 15, ct);
+
+        var ids = results.Select(r => r.ArchetypeId).ToList();
+        ids.Should().Contain("engineering/configuration-management");
+    }
+
+    [Fact]
+    public async Task SemanticSearch_DataModelingQuery_SurfacesDataModeling()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = FindArchetypesRoot();
+        var repo = new FileSystemArchetypeRepository(root, false, SupportedLanguageSet.Default());
+        var archetypes = repo.LoadAll();
+
+        using var generator = OnnxEmbeddingGenerator.Create();
+        var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+        var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
+        var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
+
+        var results = await hybrid.SearchAsync(
+            "designing the schema for a new orders and customers domain with primary keys and timestamps",
+            "csharp", maxResults: 15, ct);
+
+        var ids = results.Select(r => r.ArchetypeId).ToList();
+        ids.Should().Contain("engineering/data-modeling");
+    }
+
+    [Fact]
+    public async Task SemanticSearch_PostmortemQuery_SurfacesIncidentResponse()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = FindArchetypesRoot();
+        var repo = new FileSystemArchetypeRepository(root, false, SupportedLanguageSet.Default());
+        var archetypes = repo.LoadAll();
+
+        using var generator = OnnxEmbeddingGenerator.Create();
+        var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+        var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
+        var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
+
+        var results = await hybrid.SearchAsync(
+            "we had a production outage last night, how should we run a blameless postmortem",
+            "csharp", maxResults: 15, ct);
+
+        var ids = results.Select(r => r.ArchetypeId).ToList();
+        ids.Should().Contain("engineering/incident-response");
+    }
+
+    [Fact]
+    public async Task SemanticSearch_CloudCostQuery_SurfacesCostAwareness()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = FindArchetypesRoot();
+        var repo = new FileSystemArchetypeRepository(root, false, SupportedLanguageSet.Default());
+        var archetypes = repo.LoadAll();
+
+        using var generator = OnnxEmbeddingGenerator.Create();
+        var keywordIndex = KeywordArchetypeIndex.Build(archetypes);
+        var embeddingIndex = await EmbeddingArchetypeIndex.BuildAsync(archetypes, generator, ct);
+        var hybrid = new HybridSearchService(keywordIndex, embeddingIndex, generator);
+
+        var results = await hybrid.SearchAsync(
+            "our cloud bill is growing fast and we need to attribute cost per feature",
+            "csharp", maxResults: 15, ct);
+
+        var ids = results.Select(r => r.ArchetypeId).ToList();
+        ids.Should().Contain("engineering/cost-awareness");
+    }
 }

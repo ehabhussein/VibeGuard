@@ -413,7 +413,7 @@ With the principles and reference implementation in its context window the LLM n
 
 ## What ships in the corpus
 
-The corpus ships **77 stable archetypes** across 11 categories and **198 language files** spanning 11 languages. All archetypes are visible to LLM clients by default.
+The corpus ships **89 stable archetypes** across 11 categories and **198 language files** spanning 11 languages. All archetypes are visible to LLM clients by default.
 
 | Category        | Archetype                           | Language files                                                      |
 |-----------------|-------------------------------------|---------------------------------------------------------------------|
@@ -494,6 +494,18 @@ The corpus ships **77 stable archetypes** across 11 categories and **198 languag
 |                 | `engineering/deployment-discipline`         | `all` (principles only)                                     |
 |                 | `engineering/commit-hygiene`                | `all` (principles only)                                     |
 |                 | `engineering/documentation-discipline`      | `all` (principles only)                                     |
+|                 | `engineering/error-handling`                | `all` (principles only)                                     |
+|                 | `engineering/performance-discipline`        | `all` (principles only)                                     |
+|                 | `engineering/configuration-management`      | `all` (principles only)                                     |
+|                 | `engineering/concurrency-model`             | `all` (principles only)                                     |
+|                 | `engineering/data-modeling`                 | `all` (principles only)                                     |
+|                 | `engineering/dependency-discipline`         | `all` (principles only)                                     |
+|                 | `engineering/code-review-discipline`        | `all` (principles only)                                     |
+|                 | `engineering/incident-response`             | `all` (principles only)                                     |
+|                 | `engineering/build-and-packaging`           | `all` (principles only)                                     |
+|                 | `engineering/local-dev-ergonomics`          | `all` (principles only)                                     |
+|                 | `engineering/accessibility-and-i18n`        | `all` (principles only)                                     |
+|                 | `engineering/cost-awareness`                | `all` (principles only)                                     |
 
 Every archetype ships a `_principles.md` file (language-agnostic architectural guidance, references to OWASP ASVS / cheat sheets / CWE) plus one markdown file per supported language. Some archetypes use `applies_to: [all]` to deliver principles-only guidance that applies regardless of language — these return architectural advice without code examples.
 
